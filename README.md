@@ -35,6 +35,6 @@ uv run jev-bookmarks list
 
 ## 現在地
 
-ローカルの電話帳、履歴拡張、Native Messaging、Jevの選択と判定、`jev-ultrafast` 連携を実装した。公開ページで一回の `run` から保存まで動作を確認した。実Chromeの履歴拡張はまだ読み込めていないため、履歴経由の実機動作は未確認。WindowsのNative Messaging登録と名前付きパイプも未実装。
+ローカルの電話帳、履歴拡張、Native Messaging、Jevの選択と判定、`jev-ultrafast` 連携を実装した。このMacのChromeに拡張を読み込み、実履歴から80件へ絞った候補の取得と、空の電話帳から履歴選択・ブラウザ操作・有用性判定・URL保存まで一回の `run` で確認した。WindowsのNative Messaging登録と名前付きパイプは未実装。
 
 [製品設計](docs/design.md)にシーケンスと受入条件を記録している。
