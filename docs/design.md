@@ -65,7 +65,7 @@ sequenceDiagram
 | TypeSafe Jev | 有限個のURL候補から選び、操作後のページが目的に役立つかを判定する。 |
 | 上流 `jev-ultrafast` | 開始URLと目的を受け取り、Browser Harness経由でChromeを観測・操作する。各操作の選択は上流ループが所有する。 |
 
-Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOS/LinuxではUnixソケット、Windowsでは名前付きパイプをOS適合部分として使い、呼び出し契約は共通にする。拡張がその場で履歴を検索して結果を返す。拡張IDを固定してホスト側で許可する配線と、Chrome起動中に要求を往復できることを、実装の最初の実機検証項目とする。履歴を持つChromeプロファイルと `jev-ultrafast` が操作するプロファイルが同じであることも確認する。履歴接続だけが使えない時は電話帳の候補を使い、履歴が必要なら `HISTORY_UNAVAILABLE` を返す。Browser Harnessが操作対象Chromeへ接続できなければ `BROWSER_UNAVAILABLE` を返す。
+Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。現行のmacOS/Linux実装はUnixソケットを使う。WindowsのNative Messaging登録と名前付きパイプは未実装。拡張は要求時に履歴を検索して結果を返す。拡張IDを固定してホスト側で許可し、Chrome起動中に要求を往復できることはmacOSで実測した。履歴を持つChromeプロファイルと `jev-ultrafast` が操作するプロファイルが同じであることは利用時の設定要件であり、プロファイルIDの自動照合はない。電話帳から入口が選べれば履歴接続は使わない。履歴が必要な時に接続できなければ `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
 
 ## 候補の選び方
 
@@ -75,7 +75,7 @@ Chrome拡張からホストへは `connectNative` を使う。拡張が起動し
 - Jevには目的文と候補のID・タイトル・ホスト名・パスを渡す。URLのクエリ文字列とフラグメント、履歴全件は送らない。戻ったIDをローカルの候補表で実URLに解決する。候補にないURLを生成させない。
 - 候補が欠けていればJevには選べない。候補生成の再現率を実測し、足りない時だけサイト単位の段階選択などを追加する。「該当なし」をURLに読み替えず、そのまま返す。
 
-URL選択時の `confidence` は候補間の確率分布の集中度であり、操作後の有用性判定とは別の値として扱う。
+URL選択時の確率分布と操作後の有用性判定は別の値である。現行の応答には、操作後の有用性判定の確率だけを含める。
 
 ## 操作後の有用性判定
 
@@ -93,12 +93,12 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 
 ## 呼び出し契約
 
-タスクの公開入口はエージェントが使えるローカルコマンド一つとし、結果は機械可読なJSONで返す。具体的なJSON schemaは接続検証後に固定する。
+タスクの公開入口は `jev-bookmarks run '目的'` の一回とし、結果は機械可読なJSONで返す。完了時は `status`、`goal`、`source`、`selected_url`、`page`、`operation_status`、`actions`、`useful`、`usefulness_probability`、`saved` を返す。`page` にはURL、タイトル、表示文の冒頭を含む。
 
 - `run(goal)` → 観測ページ、上流の操作結果、Jevの有用性判定、電話帳への保存有無を返す。入口がなければ `no_entry`、外部境界の失敗は型付きエラーを返す。
 - `list` / `forget` → 電話帳を確認・削除する。
 
-履歴への権限はChrome拡張の `history`、ローカル連携は `nativeMessaging` に限る。履歴接続とBrowser Harness接続の失敗は区別する。TypeSafeのAPIが失敗した時も候補を適当に一つ選ばない。`no_entry` ならサイト探索へ無言で切り替えず、親AIには一回の実行結果として返す。
+履歴への権限はChrome拡張の `history`、ローカル連携は `nativeMessaging` に限る。履歴接続、TypeSafe、Browser Use、電話帳、プロジェクト検出の失敗はそれぞれ `HistoryError`、`TypeSafeError`、`BrowserUseError`、`PhonebookError`、`ProjectHomeError` としてJSONに表示し、CLIは終了コード1を返す。TypeSafeのAPIが失敗した時も候補を適当に一つ選ばない。`no_entry` ならサイト探索へ無言で切り替えず、親AIには一回の実行結果として返す。
 
 ## 最初の実装範囲と受入
 
@@ -119,4 +119,4 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 - Jevが役立つ・役立たないをどの程度正しく判定するか。機密情報を絞ったページ状態で足りるか。
 - 保存したページURLの再利用性と、クエリに状態を含むページの扱い。
 
-MFの他の目的についての候補再現率と判定精度はまだ確認していない。
+MFの他の目的についての候補再現率と判定精度、新しい端末での導入、Chrome履歴とBrowser UseのプロファイルID照合はまだ確認していない。

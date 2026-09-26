@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Jev Bookmarks</title>
+  <desc id="desc">Chrome history leads through Jev browser use to project bookmarks.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1426"/>
+      <stop offset="1" stop-color="#152A3D"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#6EA5B0" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+  <circle cx="1114" cy="104" r="310" fill="#54CDBB" opacity=".06"/>
+  <circle cx="868" cy="600" r="280" fill="#E9C77B" opacity=".04"/>
+  <rect x="64" y="55" width="64" height="64" rx="18" fill="#70DDCC"/>
+  <path d="M82 77h28v31l-14-9-14 9z" fill="#0B2634"/>
+  <text x="149" y="98" fill="#A9E9E0" font-family="Helvetica Neue,Arial,sans-serif" font-size="25" font-weight="700" letter-spacing="3">JEV BOOKMARKS</text>
+  <text x="64" y="224" fill="#F4F7FA" font-family="Helvetica Neue,Arial,sans-serif" font-size="63" font-weight="700">Find the right page.</text>
+  <text x="64" y="304" fill="#F4F7FA" font-family="Helvetica Neue,Arial,sans-serif" font-size="63" font-weight="700">Keep what helped.</text>
+  <text x="68" y="367" fill="#A9BDC8" font-family="Helvetica Neue,Arial,sans-serif" font-size="25">One goal. One browser run. A smaller project address book.</text>
+  <path d="M78 469H1202" stroke="#6F9FA6" stroke-opacity=".7" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="204" cy="469" r="12" fill="#73DFCF"/>
+  <circle cx="639" cy="469" r="12" fill="#A6DAD1"/>
+  <circle cx="1078" cy="469" r="12" fill="#E9C77B"/>
+  <text x="78" y="535" fill="#EAF3F5" font-family="Helvetica Neue,Arial,sans-serif" font-size="24" font-weight="700">CHROME HISTORY</text>
+  <text x="570" y="535" fill="#EAF3F5" font-family="Helvetica Neue,Arial,sans-serif" font-size="24" font-weight="700">JEV</text>
+  <text x="882" y="535" fill="#EAF3F5" font-family="Helvetica Neue,Arial,sans-serif" font-size="24" font-weight="700">PROJECT BOOKMARKS</text>
+  <text x="79" y="579" fill="#A9BDC8" font-family="Helvetica Neue,Arial,sans-serif" font-size="18">Visited URLs</text>
+  <text x="570" y="579" fill="#A9BDC8" font-family="Helvetica Neue,Arial,sans-serif" font-size="18">Choose · Use · Judge</text>
+  <text x="882" y="579" fill="#A9BDC8" font-family="Helvetica Neue,Arial,sans-serif" font-size="18">Useful pages only</text>
+</svg>
