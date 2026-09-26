@@ -3,6 +3,7 @@
 # Jev Bookmarks
 
 [![CI](https://github.com/quolu/jev-bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/quolu/jev-bookmarks/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > Chrome履歴から目的に合うページを選び、Jevで操作し、役立ったURLだけをGitプロジェクトごとの電話帳に残すCLI。
 
@@ -106,3 +107,7 @@ jev-bookmarks forget 'https://example.com/'
 </details>
 
 不具合や改善案は [Issues](https://github.com/quolu/jev-bookmarks/issues) へ。個人のURL、ページ本文、APIキーを公開Issueに貼らないでください。[開発への参加](CONTRIBUTING.md)と[セキュリティ報告](SECURITY.md)も参照してください。
+
+## ライセンス
+
+[MIT License](LICENSE)。

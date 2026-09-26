@@ -8,5 +8,6 @@
 - Chrome履歴の全件コピーを作らず、要求中に候補を最大80件へ絞る。
 - macOSで実履歴、MFクラウド会計の2画面、電話帳の再利用、プロジェクト間の分離を確認した。
 - 開発用 `pytest` を9.0.3へ更新し、[一時ディレクトリ処理の脆弱性](https://github.com/advisories/GHSA-6w46-j5rx-g56g)に対応した。
+- MITライセンスで公開した。
 
 WindowsのNative Messaging登録と名前付きパイプは未実装。Linuxと新しい端末での導入は未検証。
