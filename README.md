@@ -10,8 +10,31 @@ Chromeで実際に訪れたページから、頼みごとに合う入口を見�
 
 サイト巡回や全履歴の一括保存は行わない。Jevへ履歴全件を渡さず、URLは候補の実値から選ぶ。
 
-## 設計
+## 導入
 
-[製品設計](docs/design.md)に、Chrome履歴との接続、Jevによる選択と操作後の判定、役立つページの記録、受入条件をまとめた。
+Python 3.12、`uv`、Google Chromeを使う。現在の実機導入先はmacOS。拡張はChromeの通常の開発者向け画面から読み込む。
 
-現時点は設計と初期リポジトリのみ。Chrome拡張・ローカルコマンド・履歴接続は未実装。
+```sh
+uv sync
+uv run jev-bookmarks install \
+  --typesafe-env /path/to/typesafe.env \
+  --browser-env /path/to/jev-ultrafast.env
+```
+
+Chromeで `chrome://extensions` を開き、デベロッパーモードを有効にして、このリポジトリの `extension/` を「パッケージ化されていない拡張機能」として読み込む。表示された拡張IDは `jev-bookmarks install` の出力と一致する必要がある。拡張は `history` と `nativeMessaging` の権限を使う。
+
+```sh
+uv run jev-bookmarks status
+uv run jev-bookmarks run 'Example Domainのページを表示する'
+uv run jev-bookmarks list
+```
+
+`run` は電話帳、必要ならChrome履歴から入口を選び、上流 `jev-ultrafast` の操作後にJevが有用性を判定する。役立つと判定した時だけ、観測したページのURLを電話帳へ保存する。親AIにはページ、操作結果、有用性判定、保存有無をまとめて返す。
+
+電話帳はユーザー専用のローカルデータに置く。Chrome履歴全件は永続コピーせず、Jevへは最大80件の候補情報だけを渡す。操作後の判定には表示情報の一部を渡すため、機密性の高いページを扱う前に送信範囲を確認する。
+
+## 現在地
+
+ローカルの電話帳、履歴拡張、Native Messaging、Jevの選択と判定、`jev-ultrafast` 連携を実装した。公開ページで一回の `run` から保存まで動作を確認した。実Chromeの履歴拡張はまだ読み込めていないため、履歴経由の実機動作は未確認。WindowsのNative Messaging登録と名前付きパイプも未実装。
+
+[製品設計](docs/design.md)にシーケンスと受入条件を記録している。

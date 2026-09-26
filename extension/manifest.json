@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Jev Bookmarks 履歴接続",
+  "version": "0.1.0",
+  "description": "要求時だけChrome履歴から候補を絞り、Jev Bookmarksへ渡します。",
+  "permissions": ["history", "nativeMessaging"],
+  "background": { "service_worker": "background.js" },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5BwHMN/ahf6VOz+c0GEAD37Qc3To48s/IwsGIUTdwDUJPApNe4UPwOTR8Cgt4pRmm5QiFwBh2fXU2CYuhQbv8FwJkDzw7JxIkBIMJgdAnzAceQ6RMh8EtajY4RjjVdRw8zGhxpQeWuuoDmL4u69UBveUdys0j8IB0B8dFgPReO4hRneRpNyT00m2kfBLYThg4kWumNhZVnnbEjFotUhP9OO5XZhmOM2+JCukUfx2JN5lRlmMraK3aEKoIcBwX4qxqPv1mtPYdU2ZxcdVEGEtNiDj8PBEqdQGLnx3kguL549TJIqNAVRVWbQYEa+8hnkvLh4hj1ykoC6IYbgY7vaozwIDAQAB"
+}
