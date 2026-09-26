@@ -22,6 +22,19 @@ def test_phonebook_records_only_confirmed_page(tmp_path: Path):
     assert phonebook.read(path) == []
 
 
+def test_phonebook_write_failure_keeps_previous_entry(tmp_path: Path, monkeypatch):
+    path = tmp_path / "bookmarks.json"
+    phonebook.remember("最初の目的", "https://example.com/first", "最初", path)
+
+    def fail_replace(*_args):
+        raise OSError("保存先を更新できません")
+
+    monkeypatch.setattr(phonebook.os, "replace", fail_replace)
+    with pytest.raises(phonebook.PhonebookError, match="保存先を更新できません"):
+        phonebook.remember("次の目的", "https://example.com/next", "次", path)
+    assert [entry["url"] for entry in phonebook.read(path)] == ["https://example.com/first"]
+
+
 def test_native_bridge_round_trip_with_extension_response(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
     process = subprocess.Popen(

@@ -16,7 +16,8 @@ Python 3.12、`uv`、Google Chromeを使う。現在の実機導入先はmacOS�
 
 ```sh
 uv sync
-uv run jev-bookmarks install \
+uv tool install --editable .
+jev-bookmarks install \
   --typesafe-env /path/to/typesafe.env \
   --browser-env /path/to/jev-ultrafast.env
 ```
@@ -24,9 +25,9 @@ uv run jev-bookmarks install \
 Chromeで `chrome://extensions` を開き、デベロッパーモードを有効にして、このリポジトリの `extension/` を「パッケージ化されていない拡張機能」として読み込む。表示された拡張IDは `jev-bookmarks install` の出力と一致する必要がある。拡張は `history` と `nativeMessaging` の権限を使う。
 
 ```sh
-uv run jev-bookmarks status
-uv run jev-bookmarks run 'Example Domainのページを表示する'
-uv run jev-bookmarks list
+jev-bookmarks status
+jev-bookmarks run 'Example Domainのページを表示する'
+jev-bookmarks list
 ```
 
 `run` は電話帳、必要ならChrome履歴から入口を選び、上流 `jev-ultrafast` の操作後にJevが有用性を判定する。役立つと判定した時だけ、観測したページのURLを電話帳へ保存する。親AIにはページ、操作結果、有用性判定、保存有無をまとめて返す。
@@ -35,6 +36,6 @@ uv run jev-bookmarks list
 
 ## 現在地
 
-ローカルの電話帳、履歴拡張、Native Messaging、Jevの選択と判定、`jev-ultrafast` 連携を実装した。このMacのChromeに拡張を読み込み、実履歴から80件へ絞った候補の取得と、空の電話帳から履歴選択・ブラウザ操作・有用性判定・URL保存まで一回の `run` で確認した。WindowsのNative Messaging登録と名前付きパイプは未実装。
+ローカルの電話帳、履歴拡張、Native Messaging、Jevの選択と判定、`jev-ultrafast` 連携を実装した。このMacのChromeに拡張を読み込み、実履歴から80件へ絞った候補の取得と、空の電話帳から履歴選択・ブラウザ操作・有用性判定・URL保存まで一回の `run` で確認した。MFクラウド会計では登録済み口座一覧と明細一覧を履歴から選び、操作後に役立つと判定できた。電話帳からの再利用は履歴検索を使わない条件でも確認した。WindowsのNative Messaging登録と名前付きパイプは未実装。
 
 [製品設計](docs/design.md)にシーケンスと受入条件を記録している。
