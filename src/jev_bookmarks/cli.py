@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import history_bridge, phonebook, runner, typesafe
 from .install import extension_id, install_native_host, project_root
-from .paths import socket_path
+from .paths import ProjectHomeError, socket_path
 from .settings import load_environment, save_env_paths
 
 
@@ -52,6 +52,7 @@ def main() -> None:
         typesafe.TypeSafeError,
         phonebook.PhonebookError,
         runner.BrowserUseError,
+        ProjectHomeError,
         FileNotFoundError,
     ) as exc:
         _print({"status": "error", "code": type(exc).__name__, "message": str(exc)})

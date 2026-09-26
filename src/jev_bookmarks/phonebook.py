@@ -40,6 +40,10 @@ def _write(path: Path, entries: list[dict]) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(path.parent, 0o700)
+        if path.parent.name == "jev-bookmark":
+            ignore = path.parent / ".gitignore"
+            if not ignore.exists():
+                ignore.write_text("*\n!.gitignore\n", encoding="utf-8")
         fd, temp_name = tempfile.mkstemp(prefix=".bookmarks-", dir=path.parent)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
