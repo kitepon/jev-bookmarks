@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import history_bridge, phonebook, runner, typesafe
 from .install import extension_id, install_native_host, project_root
-from .paths import ProjectHomeError, socket_path
+from .paths import ProjectHomeError
 from .settings import load_environment, save_env_paths
 
 
@@ -39,7 +39,7 @@ def main() -> None:
                 "extension_id": extension_id(),
             })
         elif args.command == "status":
-            _print({"history_connected": socket_path().exists(), "extension_id": extension_id()})
+            _print({"history_connected": history_bridge.available(), "extension_id": extension_id()})
         elif args.command == "list":
             _print(phonebook.read())
         elif args.command == "forget":

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from jev_bookmarks import history_bridge, phonebook, runner, typesafe
-from jev_bookmarks.paths import ProjectHomeError, phonebook_path, socket_path
+from jev_bookmarks.paths import ProjectHomeError, phonebook_path
 
 
 def test_phonebook_records_only_confirmed_page(tmp_path: Path):
@@ -74,9 +74,9 @@ def test_native_bridge_round_trip_with_extension_response(tmp_path: Path, monkey
     )
     try:
         deadline = time.monotonic() + 5
-        while not socket_path().exists() and time.monotonic() < deadline:
+        while not history_bridge.available() and time.monotonic() < deadline:
             time.sleep(0.01)
-        assert socket_path().exists()
+        assert history_bridge.available()
 
         received = []
 
@@ -101,7 +101,7 @@ def test_native_bridge_round_trip_with_extension_response(tmp_path: Path, monkey
         process.stdin.close()
         process.wait(timeout=5)
         assert process.returncode == 0, process.stderr.read().decode()
-    assert not socket_path().exists()
+    assert not history_bridge.available()
 
 
 def test_unhelpful_page_returns_to_parent_without_saving(monkeypatch):
