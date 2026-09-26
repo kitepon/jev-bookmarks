@@ -6,4 +6,4 @@
 - [TypeSafe API](https://docs.typesafe.ai/api): System Oneの `state`、`questions`、モデル指定。
 - [jev-ultrafast README](https://github.com/browser-use/jev-ultrafast): `Agent(開始URL, 目的)`、自律操作ループ、`DONE` 後の独立検証が必要なこと。
 
-2026-09-26に確認。Jev Bookmarksの実装・実機接続は未検証。
+2026-09-26に一次資料を確認。実装と実機接続の検証結果は [README](../README.md) と [製品設計](../docs/design.md) に記録する。
