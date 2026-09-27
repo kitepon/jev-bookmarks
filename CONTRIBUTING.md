@@ -8,12 +8,18 @@ Python 3.12、`uv`、Node.js、Gitを使います。
 
 ```sh
 uv sync --locked
-uv run pytest tests/test_core.py -q
+uv run pytest -q
 node --test tests/extension.test.mjs
 uv run ruff check .
 ```
 
+Windowsでは上流の都合で `PYTHONUTF8=1` を付けてテストを実行してください（CLIは自動でUTF-8モードに切り替えます）。
+
 通常のテストは公開の `example.com` と一時Gitプロジェクトを使い、Chromeの実履歴やTypeSafeのAPIキーを必要としません。実機確認を行う場合は [README](README.md#導入) の設定を使い、結果に私用URLやページ本文を載せないでください。
+
+## OSとハーネス
+
+共通コードに `sys.platform` の分岐や特定ハーネスの事情を書かないでください。OSの違いは `src/jev_bookmarks/platforms/<os>.py`、ハーネスの違いは `src/jev_bookmarks/harnesses/<harness>.py` に閉じます。守る約束は各 `__init__.py` にあり、`tests/test_adapters.py` が確かめます。
 
 ## 変更の境界
 

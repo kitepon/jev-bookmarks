@@ -65,7 +65,14 @@ sequenceDiagram
 | TypeSafe Jev | 有限個のURL候補から選び、操作後のページが目的に役立つかを判定する。 |
 | 上流 `jev-ultrafast` | 開始URLと目的を受け取り、Browser Harness経由でChromeを観測・操作する。各操作の選択は上流ループが所有する。 |
 
-Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。現行のmacOS/Linux実装はUnixソケットを使う。WindowsのNative Messaging登録と名前付きパイプは未実装。拡張は要求時に履歴を検索して結果を返す。拡張IDを固定してホスト側で許可し、Chrome起動中に要求を往復できることはmacOSで実測した。履歴を持つChromeプロファイルと `jev-ultrafast` が操作するプロファイルが同じであることは利用時の設定要件であり、プロファイルIDの自動照合はない。電話帳から入口が選べれば履歴接続は使わない。履歴が必要な時に接続できなければ `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
+Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。拡張は要求時に履歴を検索して結果を返す。拡張IDを固定してホスト側で許可し、Chrome起動中に要求を往復できることはmacOS・Windows・Linuxで実測した。履歴を持つChromeプロファイルと `jev-ultrafast` が操作するプロファイルが同じであることは利用時の設定要件であり、プロファイルIDの自動照合はない。電話帳から入口が選べれば履歴接続は使わない。履歴が必要な時に接続できなければ `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
+
+## OSとハーネスへの適合
+
+共通コードは今のOSやハーネスで分岐しない。OSごとの違いは `platforms/` の一つのファイルに、ハーネスごとの違いは `harnesses/` の一つのファイルに閉じる。
+
+- OS適合（`platforms/macos.py`・`windows.py`・`linux.py`）: 端末共通データの場所、Native Messagingマニフェストの置き場と登録、hostの実行ファイル、履歴接続のローカルIPC（待受と要求）、CLI起動時の準備を持つ。Windowsは上流 `jev-ultrafast` が既定の文字コードでファイルを読むため、CLIをUTF-8モードで起動し直す。
+- ハーネス適合（`harnesses/claude.py`・`codex.py`・`cursor.py`・`grok.py`）: 親AIとなるハーネスに `run` の呼び方を教えるスキルの置き場と、そのハーネスでの実行上の注意（タイムアウト、サンドボックス）を持つ。スキル本文の共通部分は `harnesses/skill.md`。`jev-bookmarks harness install` が入れ、既存の自作スキルは上書きしない。
 
 ## 候補の選び方
 
@@ -119,4 +126,6 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 - Jevが役立つ・役立たないをどの程度正しく判定するか。機密情報を絞ったページ状態で足りるか。
 - 保存したページURLの再利用性と、クエリに状態を含むページの扱い。
 
-MFの他の目的についての候補再現率と判定精度、新しい端末での導入、Chrome履歴とBrowser UseのプロファイルID照合はまだ確認していない。
+WindowsではChrome履歴から拡張・名前付きパイプ経由で候補80件を、Linuxでは試験用プロファイルで拡張・Unixソケット経由の往復を確認した。Claude Code・Codex・Cursor・Grok Buildの4ハーネスがスキルを認識することも確かめた。
+
+MFの他の目的についての候補再現率と判定精度、WindowsとLinuxでのTypeSafeとブラウザ操作を含む `run` 全体、Chrome履歴とBrowser UseのプロファイルID照合はまだ確認していない。
