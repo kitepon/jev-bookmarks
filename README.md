@@ -2,7 +2,7 @@
 
 # Jev Bookmarks
 
-[![CI](https://github.com/quolu/jev-bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/quolu/jev-bookmarks/actions/workflows/ci.yml)
+[![CI](https://github.com/kitepon/jev-bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon/jev-bookmarks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > Chrome履歴から目的に合うページを選び、Jevで操作し、役立ったURLだけをGitプロジェクトごとの電話帳に残すCLI。
@@ -57,7 +57,7 @@ flowchart LR
 Python 3.12、`uv`、Git、Google Chrome、[TypeSafe](https://docs.typesafe.ai/)のAPIキー、[jev-ultrafast](https://github.com/browser-use/jev-ultrafast)が使うブラウザ接続とモデル設定が必要です。手順はmacOS・Windows・Linuxで同じです（Windowsは PowerShell で実行します）。
 
 ```sh
-git clone https://github.com/quolu/jev-bookmarks.git
+git clone https://github.com/kitepon/jev-bookmarks.git
 cd jev-bookmarks
 uv sync --locked
 uv tool install --editable .
@@ -124,7 +124,7 @@ WindowsとLinuxでの `run` 全体、MFの幅広い目的での判定精度は�
 
 </details>
 
-不具合や改善案は [Issues](https://github.com/quolu/jev-bookmarks/issues) へ。個人のURL、ページ本文、APIキーを公開Issueに貼らないでください。[開発への参加](CONTRIBUTING.md)と[セキュリティ報告](SECURITY.md)も参照してください。
+不具合や改善案は [Issues](https://github.com/kitepon/jev-bookmarks/issues) へ。個人のURL、ページ本文、APIキーを公開Issueに貼らないでください。[開発への参加](CONTRIBUTING.md)と[セキュリティ報告](SECURITY.md)も参照してください。
 
 ## コードの構成
 

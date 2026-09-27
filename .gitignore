@@ -5,4 +5,13 @@ __pycache__/
 .ruff_cache/
 *.pyc
 .env
+.env.*
+*.env
+!*.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+jev-bookmark/
+.DS_Store
 *.egg-info/

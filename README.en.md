@@ -21,7 +21,7 @@ The command first checks `<git-root>/jev-bookmark/bookmarks.json`, then asks the
 You need Python 3.12, `uv`, Git, Google Chrome, a TypeSafe API key, and a working `jev-ultrafast` browser and model configuration.
 
 ```sh
-git clone https://github.com/quolu/jev-bookmarks.git
+git clone https://github.com/kitepon/jev-bookmarks.git
 cd jev-bookmarks
 uv sync --locked
 uv tool install --editable .
@@ -46,4 +46,4 @@ Shared code, OS adaptation (`src/jev_bookmarks/platforms/`), and harness adaptat
 - URLs and visible page text can contain sensitive information. Inspect the providers and data sent before using private pages. Never paste real account pages or keys into public issues.
 - macOS has been exercised end to end with real Chrome history. On Windows the real-history round trip through the extension and named pipe, and on Linux the round trip through the extension and Unix socket in a test profile, have been verified; a full `run` with TypeSafe and browser operation has not yet been verified there. All four harnesses were checked to see the skill on all three OSes.
 
-For the full walkthrough, evidence, and current limitations, see the [Japanese README](README.md). Bug reports and contributions are welcome through [Issues](https://github.com/quolu/jev-bookmarks/issues) and [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md). Licensed under the [MIT License](LICENSE).
+For the full walkthrough, evidence, and current limitations, see the [Japanese README](README.md). Bug reports and contributions are welcome through [Issues](https://github.com/kitepon/jev-bookmarks/issues) and [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md). Licensed under the [MIT License](LICENSE).

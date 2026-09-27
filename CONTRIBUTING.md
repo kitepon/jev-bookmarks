@@ -1,6 +1,6 @@
 # 開発への参加
 
-不具合や改善案は [Issues](https://github.com/quolu/jev-bookmarks/issues) へ。再現手順には公開ページか架空データを使い、閲覧履歴、実際の口座ページ、完全な私用URL、APIキーを貼らないでください。脆弱性は [SECURITY.md](SECURITY.md) の経路で非公開報告してください。
+不具合や改善案は [Issues](https://github.com/kitepon/jev-bookmarks/issues) へ。再現手順には公開ページか架空データを使い、閲覧履歴、実際の口座ページ、完全な私用URL、APIキーを貼らないでください。脆弱性は [SECURITY.md](SECURITY.md) の経路で非公開報告してください。
 
 ## 開発環境
 
