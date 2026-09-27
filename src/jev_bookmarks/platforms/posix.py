@@ -1,0 +1,64 @@
+"""macOSとLinuxが共有するUnixソケットの履歴接続。"""
+
+import hashlib
+import os
+import socket
+import socketserver
+import stat
+import threading
+from collections.abc import Callable
+from pathlib import Path
+
+
+def socket_path(data_dir: Path) -> Path:
+    identity = hashlib.sha256(str(data_dir.resolve()).encode()).hexdigest()[:12]
+    return Path("/tmp") / f"jev-bookmarks-{os.getuid()}-{identity}" / "bridge.sock"
+
+
+def _prepare_socket(path: Path) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if path.parent.stat().st_uid != os.getuid() or stat.S_IMODE(path.parent.stat().st_mode) != 0o700:
+        raise RuntimeError("履歴接続ディレクトリの所有者か権限が不正です")
+    os.chmod(path.parent, 0o700)
+    if path.exists():
+        probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            probe.connect(str(path))
+        except OSError:
+            path.unlink()
+        else:
+            raise RuntimeError("Chrome履歴のホストが既に稼働しています")
+        finally:
+            probe.close()
+    return str(path)
+
+
+class _Server(socketserver.ThreadingUnixStreamServer):
+    daemon_threads = True
+
+
+def serve(path: Path, answer: Callable[[bytes], bytes], pump: Callable[[], None]) -> None:
+    class Handler(socketserver.StreamRequestHandler):
+        def handle(self) -> None:
+            self.wfile.write(answer(self.rfile.readline(64_000)) + b"\n")
+
+    address = _prepare_socket(path)
+    with _Server(address, Handler) as server:
+        os.chmod(address, 0o600)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        try:
+            pump()
+        finally:
+            server.shutdown()
+            worker.join()
+            os.unlink(address)
+
+
+def ask(path: Path, request: bytes) -> str:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
+        connection.settimeout(45)
+        connection.connect(str(path))
+        connection.sendall(request + b"\n")
+        with connection.makefile("r", encoding="utf-8") as stream:
+            return stream.readline(4_000_000)
