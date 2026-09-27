@@ -31,6 +31,14 @@ def _display_url(url: str) -> str:
     return f"{parsed.netloc}{parsed.path or '/'}"[:180]
 
 
+ENTRY_INSTRUCTIONS = (
+    "ブラウザ操作エージェントがこのページから操作を始めて、目的を果たせるページまで数回のクリックでたどり着けるかで選ぶ。"
+    "目的のページそのものが候補にあればそれを選ぶ。"
+    "無くても、同じサイトやサービスの入口（トップ、ドキュメントの目次や導入ページ、ダッシュボード）があればそれを選ぶ。"
+    "目的と関係するサイトやサービスの候補が一つも無い時だけnoneを選ぶ。"
+)
+
+
 def choose(goal: str, candidates: list[dict]) -> dict | None:
     if not candidates:
         return None
@@ -40,13 +48,14 @@ def choose(goal: str, candidates: list[dict]) -> dict | None:
         f"c{index}": f"{candidate.get('title') or '無題'} | {_display_url(candidate['url'])}"
         for index, candidate in enumerate(candidates)
     }
-    criteria["none"] = "目的に役立つページが候補にない"
+    criteria["none"] = "どの候補も、目的と関係するサイトやサービスのページではない"
+    # 入口は目的のページそのものでなくてよい。そこから上流の操作でたどれれば足りる。
     answers = _evaluate(
         {"goal": goal},
         {
             "page": {
                 "type": "choice",
-                "instructions": "目的を進める入口として最も適切な候補を一つ選ぶ。該当しなければnoneを選ぶ。",
+                "instructions": ENTRY_INSTRUCTIONS,
                 "criteria": criteria,
             }
         },

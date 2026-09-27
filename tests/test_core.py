@@ -161,3 +161,22 @@ def test_browser_failure_is_reported_as_external_error(monkeypatch):
     monkeypatch.setattr(typesafe, "choose", lambda goal, candidates: candidates[0])
     with pytest.raises(runner.BrowserUseError, match="Chromeに接続できません"):
         runner.run("Example Domainを開く")
+
+
+def test_entry_choice_asks_for_a_reachable_start_not_only_the_target(monkeypatch):
+    asked = {}
+
+    def evaluate(state, questions):
+        asked.update(questions["page"])
+        return {"page": {"choice": "c0"}}
+
+    monkeypatch.setattr(typesafe, "_evaluate", evaluate)
+    intro = {"url": "https://docs.example.com/introduction", "title": "Introduction"}
+    assert typesafe.choose("Noulの説明ページを開く", [intro]) == intro
+    # 目的のページが候補に無くても、同じサイトの入口は選べるように問う。noneは関係するサイトが無い時だけ。
+    assert "たどり着けるか" in asked["instructions"]
+    assert "同じサイトやサービスの入口" in asked["instructions"]
+    assert asked["criteria"]["none"] == "どの候補も、目的と関係するサイトやサービスのページではない"
+
+    monkeypatch.setattr(typesafe, "_evaluate", lambda state, questions: {"page": {"choice": "none"}})
+    assert typesafe.choose("Amazonで電池を注文する", [intro]) is None
