@@ -54,7 +54,7 @@ flowchart LR
 
 ## 導入
 
-Python 3.12、`uv`、Git、Google Chrome、[TypeSafe](https://docs.typesafe.ai/)のAPIキー、[jev-ultrafast](https://github.com/browser-use/jev-ultrafast)が使うブラウザ接続とモデル設定が必要です。手順はmacOS・Windows・Linuxで同じです（Windowsは PowerShell で実行します）。
+Python 3.12、`uv`、Git、Google Chrome、[TypeSafe](https://docs.typesafe.ai/)のAPIキー、[jev-ultrafast](https://github.com/browser-use/jev-ultrafast)が使うブラウザ接続とモデル設定が必要です。jev-ultrafastは、上流に修正が入るまで[フォーク](https://github.com/quolu/jev-ultrafast)の版を使います（`uv sync` で自動的に入ります）。手順はmacOS・Windows・Linuxで同じです（Windowsは PowerShell で実行します）。
 
 ```sh
 git clone https://github.com/kitepon/jev-bookmarks.git

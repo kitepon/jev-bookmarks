@@ -164,7 +164,7 @@ wheels = [
 
 [[package]]
 name = "jev-bookmarks"
-version = "0.2.1"
+version = "0.2.2"
 source = { editable = "." }
 dependencies = [
     { name = "httpx", extra = ["http2"] },
@@ -180,7 +180,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", extras = ["http2"], specifier = ">=0.28,<1" },
-    { name = "jev-ultrafast", git = "https://github.com/browser-use/jev-ultrafast.git" },
+    { name = "jev-ultrafast", git = "https://github.com/quolu/jev-ultrafast.git?rev=e24e14f1488e8ec35a544a47d78b9747ebefbdcb" },
 ]
 
 [package.metadata.requires-dev]
@@ -192,7 +192,7 @@ dev = [
 [[package]]
 name = "jev-ultrafast"
 version = "0.1.0"
-source = { git = "https://github.com/browser-use/jev-ultrafast.git#1231850a0bf1a0c0341fe408ef1668dbbfdfac46" }
+source = { git = "https://github.com/quolu/jev-ultrafast.git?rev=e24e14f1488e8ec35a544a47d78b9747ebefbdcb#e24e14f1488e8ec35a544a47d78b9747ebefbdcb" }
 dependencies = [
     { name = "browser-harness" },
     { name = "httpx", extra = ["http2"] },

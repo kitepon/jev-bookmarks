@@ -13,7 +13,7 @@ node --test tests/extension.test.mjs
 uv run ruff check .
 ```
 
-Windowsでは上流の都合で `PYTHONUTF8=1` を付けてテストを実行してください（CLIは自動でUTF-8モードに切り替えます）。
+Windowsでは `PYTHONUTF8=1` を付けてテストを実行してください。CLIは実行時に自動でUTF-8モードへ切り替わるので、試験も同じ条件にそろえます。
 
 通常のテストは公開の `example.com` と一時Gitプロジェクトを使い、Chromeの実履歴やTypeSafeのAPIキーを必要としません。実機確認を行う場合は [README](README.md#導入) の設定を使い、結果に私用URLやページ本文を載せないでください。
 

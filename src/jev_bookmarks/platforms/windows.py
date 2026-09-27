@@ -38,7 +38,7 @@ def register_host(manifest: Path) -> None:
 
 
 def prepare_process() -> None:
-    # 上流のjev-ultrafastはファイルを既定の文字コード（cp932）で読むので、UTF-8モードで動かし直す。
+    # 既定の文字コード（cp932）ではなくUTF-8で動かし、ハーネスへ返すJSONや読み書きするファイルをUTF-8にそろえる。
     if not sys.flags.utf8_mode:
         completed = subprocess.run([sys.executable, "-X", "utf8", "-m", "jev_bookmarks.cli", *sys.argv[1:]])
         sys.exit(completed.returncode)
