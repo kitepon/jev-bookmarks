@@ -6,7 +6,7 @@ labels: bug
 assignees: ""
 ---
 
-実際の閲覧履歴、私用URL、ページ本文、APIキーを貼らないでください。脆弱性は [非公開で報告](https://github.com/quolu/jev-bookmarks/security/advisories/new) してください。
+実際の閲覧履歴、私用URL、ページ本文、APIキーを貼らないでください。脆弱性は [非公開で報告](https://github.com/kitepon/jev-bookmarks/security/advisories/new) してください。
 
 ## 起きたこと
 
