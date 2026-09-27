@@ -33,17 +33,16 @@ def _prepare_socket(path: Path) -> str:
     return str(path)
 
 
-class _Server(socketserver.ThreadingUnixStreamServer):
-    daemon_threads = True
-
-
 def serve(path: Path, answer: Callable[[bytes], bytes], pump: Callable[[], None]) -> None:
+    class Server(socketserver.ThreadingUnixStreamServer):
+        daemon_threads = True
+
     class Handler(socketserver.StreamRequestHandler):
         def handle(self) -> None:
             self.wfile.write(answer(self.rfile.readline(64_000)) + b"\n")
 
     address = _prepare_socket(path)
-    with _Server(address, Handler) as server:
+    with Server(address, Handler) as server:
         os.chmod(address, 0o600)
         worker = threading.Thread(target=server.serve_forever, daemon=True)
         worker.start()
