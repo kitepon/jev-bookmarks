@@ -113,7 +113,7 @@ jev-bookmarks forget 'https://example.com/'
 
 | ハーネス | 状態 |
 | --- | --- |
-| Claude Code・Codex・Cursor・Grok Build | 0.3.2で、専用Chromeを閉じた状態から各ハーネスがスキル経由で `run` を一度呼び、完了とハーネス終了後の専用Chrome・履歴接続の維持を確認した（Windowsの Claude Code は端末のログイン切れで未確認） |
+| Claude Code・Codex・Cursor・Grok Build | 0.3.2で、専用Chromeを閉じた状態から各ハーネスがスキル経由で `run` を一度呼び、3 OS×4ハーネスの12通りで、完了とハーネス終了後の専用Chrome・履歴接続の維持を確認した |
 
 専用プロファイルでログインが必要な実サイトの `run` は再確認待ちです。
 

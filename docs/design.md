@@ -133,7 +133,7 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 - Jevが役立つ・役立たないをどの程度正しく判定するか。機密情報を絞ったページ状態で足りるか。
 - 保存したページURLの再利用性と、クエリに状態を含むページの扱い。
 
-0.3.2では、macOS・Windows・Linuxの3端末で、専用Chromeを閉じた状態から `install` と `run`（電話帳の入口→1操作→有用性判定→保存）を通した。Linuxは画面の変数が無いSSHから、Windowsは対話ログオンのデスクトップとSSHの両方から確認した。各端末で専用Chromeを閉じてから、Claude Code・Codex・Cursor・Grok Buildの非対話実行でスキル経由の `run` を一度ずつ呼び、11通りで完了とハーネス終了後の専用Chrome・履歴接続の維持を確かめた（WindowsのClaude Codeは端末のログイン切れで未確認）。普段のChromeに0.2系の拡張とhostが残ったWindowsでも、専用Chromeの履歴接続が通ることを確認した。
+0.3.2では、macOS・Windows・Linuxの3端末で、専用Chromeを閉じた状態から `install` と `run`（電話帳の入口→1操作→有用性判定→保存）を通した。Linuxは画面の変数が無いSSHから、Windowsは対話ログオンのデスクトップとSSHの両方から確認した。各端末で専用Chromeを閉じてから、Claude Code・Codex・Cursor・Grok Buildの非対話実行でスキル経由の `run` を一度ずつ呼び、12通りすべてで完了とハーネス終了後の専用Chrome・履歴接続の維持を確かめた。普段のChromeに0.2系の拡張とhostが残ったWindowsでも、専用Chromeの履歴接続が通ることを確認した。
 
 旧版では、WindowsではChrome履歴から拡張・名前付きパイプ経由で候補80件を、Linuxでは試験用プロファイルで拡張・Unixソケット経由の往復を確認した。Claude Code・Codex・Cursor・Grok Buildの4ハーネスがスキルを認識することも確かめた。
 
