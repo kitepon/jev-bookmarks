@@ -125,18 +125,21 @@ def _start(*, history_timeout: float) -> dict:
         raise BrowserSetupError(str(exc)) from exc
     endpoint = _endpoint()
     if endpoint is None:
-        platforms.current().launch_chrome(
-            executable,
-            [
-                "--remote-debugging-address=127.0.0.1",
-                "--remote-debugging-port=0",
-                f"--user-data-dir={profile}",
-                "--no-first-run",
-                "--no-default-browser-check",
-                "--new-window",
-                "about:blank",
-            ],
-        )
+        try:
+            platforms.current().launch_chrome(
+                executable,
+                [
+                    "--remote-debugging-address=127.0.0.1",
+                    "--remote-debugging-port=0",
+                    f"--user-data-dir={profile}",
+                    "--no-first-run",
+                    "--no-default-browser-check",
+                    "--new-window",
+                    "about:blank",
+                ],
+            )
+        except (OSError, RuntimeError) as exc:
+            raise BrowserSetupError(f"Jev Bookmarks専用Chromeを起動できませんでした: {exc}") from exc
         deadline = time.monotonic() + 15
         while endpoint is None and time.monotonic() < deadline:
             time.sleep(0.1)

@@ -1,5 +1,13 @@
 # 変更履歴
 
+## 0.3.2 — 専用ChromeをWindowsとLinuxへ適合
+
+- Linux: SSHやハーネスの実行環境に画面の変数（`WAYLAND_DISPLAY`・`DISPLAY`）が無いと専用Chromeが起動できなかった。ログイン中の画面セッションを持つユーザーのsystemdから（`systemd-run --user`）起動する。画面セッションが無い時は、15秒待たずに理由を示して止まる。
+- Windows: Grok Buildはコマンドの終了時に子孫プロセスをまとめて止めるため、`run` が終わると専用Chromeも終了していた。SSHもジョブごと止める。ChromeをWMI（`Win32_Process.Create`）から起動し、呼び出し元の子孫にもジョブにも入れない。WMIが使えない時は直接起動する。
+- 普段のChromeに0.2系の履歴拡張が残っていると、そのhostが履歴接続の待受先（Unixソケット・名前付きパイプ）を握り、専用Chromeの拡張が接続できなかった（Windowsで発生）。待受先と鍵ファイルを0.2系と分け、hostは専用Chromeの拡張から起動された時だけ待ち受ける。`install` は0.2系が普段のChrome向けに置いたマニフェスト（macOS・Linux）を消す。
+- Windowsで専用拡張のファイルを複製すると改行がCRLFに変わっていた。バイト列のまま複製する。
+- 起動に失敗した理由を `BrowserSetupError` の本文に含める。
+
 ## 0.3.1 — 履歴拡張の自動読込
 
 - 固定IDの履歴拡張を、専用Chromeのloopback CDP endpointから起動ごとに読み込む。初回のデベロッパーモード操作をなくし、Chrome再起動後も履歴接続を自動で復元する。

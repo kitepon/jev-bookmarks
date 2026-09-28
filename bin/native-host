@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 PRODUCT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-exec "$PRODUCT_DIR/.venv/bin/python" -m jev_bookmarks.native_host
+exec "$PRODUCT_DIR/.venv/bin/python" -m jev_bookmarks.native_host "$@"

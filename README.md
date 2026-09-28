@@ -105,15 +105,15 @@ jev-bookmarks forget 'https://example.com/'
 
 | 環境 | 状態 |
 | --- | --- |
-| macOS + Google Chrome | 専用プロファイル、専用Harness、公開ページの観測を確認済み。ログイン済みページでの再確認待ち |
-| Windows 11 + Google Chrome | 実Chrome履歴→拡張→名前付きパイプ→CLIの往復を確認済み |
-| Linux (Ubuntu 26.04) + Google Chrome | 試験用プロファイルで拡張→Unixソケット→CLIの往復を確認済み |
+| macOS 27 + Google Chrome 153 | 専用Chromeの起動、履歴拡張の読込、Native Messaging接続、`run` を確認済み |
+| Windows 11 + Google Chrome 153 | 同上。対話ログオンのデスクトップと、SSHの両方から確認済み |
+| Linux (Ubuntu 26.04 / GNOME Wayland) + Google Chrome 152 | 同上。画面の変数が無いSSHからも、ログイン中の画面セッションへ起動できることを確認済み |
 
 | ハーネス | 状態 |
 | --- | --- |
-| Claude Code・Codex・Cursor・Grok Build | 3 OSでスキルを入れ、各ハーネスが認識することを確認済み |
+| Claude Code・Codex・Cursor・Grok Build | 0.3.2で、専用Chromeを閉じた状態から各ハーネスがスキル経由で `run` を一度呼び、完了とハーネス終了後の専用Chrome・履歴接続の維持を確認した（Windowsの Claude Code は端末のログイン切れで未確認） |
 
-WindowsとLinuxでは、TypeSafeとブラウザ操作まで含めた `run` の実機確認がまだです。
+専用プロファイルでログインが必要な実サイトの `run` は再確認待ちです。
 
 <details>
 <summary>実機確認と既知の限界</summary>

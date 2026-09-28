@@ -157,7 +157,7 @@ def test_phonebook_requires_project_home(tmp_path: Path, monkeypatch):
 def test_native_bridge_round_trip_with_extension_response(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
     process = subprocess.Popen(
-        [sys.executable, "-m", "jev_bookmarks.native_host"],
+        [sys.executable, "-m", "jev_bookmarks.native_host", f"chrome-extension://{extension_id()}/"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -192,6 +192,19 @@ def test_native_bridge_round_trip_with_extension_response(tmp_path: Path, monkey
         process.stdin.close()
         process.wait(timeout=5)
         assert process.returncode == 0, process.stderr.read().decode()
+    assert not history_bridge.available()
+
+
+def test_native_host_refuses_a_foreign_extension(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
+    completed = subprocess.run(
+        [sys.executable, "-m", "jev_bookmarks.native_host", "chrome-extension://nbheglfcinjedkfjafpleaipcnppbnan/"],
+        input=b"",
+        capture_output=True,
+        env={**os.environ, "JEV_BOOKMARKS_HOME": str(tmp_path)},
+        timeout=10,
+    )
+    assert completed.returncode == 1
     assert not history_bridge.available()
 
 

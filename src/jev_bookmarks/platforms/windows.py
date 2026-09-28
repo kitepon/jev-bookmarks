@@ -24,6 +24,11 @@ def manifest_dir() -> Path:
     return configured() / "native-messaging"
 
 
+def legacy_manifest_dirs() -> list[Path]:
+    # レジストリの登録先は同じキーなので、manifestの書き換えで旧登録も置き換わる。
+    return []
+
+
 def host_executable(root: Path) -> Path:
     if not (root / ".venv" / "Scripts" / "python.exe").is_file():
         raise RuntimeError("プロジェクトの .venv がありません。uv sync --locked を実行してください")
@@ -61,20 +66,53 @@ def chrome_executable() -> Path:
     raise RuntimeError("Google Chromeがありません。公式インストーラーで導入してください")
 
 
-def launch_chrome(executable: Path, arguments: list[str]) -> None:
-    subprocess.Popen(
-        [str(executable), *arguments],
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+def _launch_with_wmi(executable: Path, arguments: list[str]) -> bool:
+    command = subprocess.list2cmdline([str(executable), *arguments])
+    script = (
+        "$r=Invoke-CimMethod -ClassName Win32_Process -MethodName Create "
+        "-Arguments @{CommandLine=$env:JEV_BOOKMARKS_CHROME}; exit $r.ReturnValue"
     )
+    try:
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+            env={**os.environ, "JEV_BOOKMARKS_CHROME": command},
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            timeout=30,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return completed.returncode == 0
+
+
+def launch_chrome(executable: Path, arguments: list[str]) -> None:
+    # ハーネスによってはコマンドの終了時に子孫プロセスをまとめて止める（Grok Build）。WMIに作らせた
+    # Chromeは呼び出し元の子孫にもジョブにも入らず、同じログオンセッションで開く。
+    if _launch_with_wmi(executable, arguments):
+        return
+    detached = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+    # WMIが使えない時は直接起動する。SSHなどのジョブから抜けられるなら抜ける。
+    for flags in (detached | subprocess.CREATE_BREAKAWAY_FROM_JOB, detached):
+        try:
+            subprocess.Popen(
+                [str(executable), *arguments],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=flags,
+            )
+            return
+        except PermissionError:
+            continue
+    raise RuntimeError("Chromeを起動できませんでした")
 
 
 def _identity() -> str:
     from ..paths import data_dir as configured
 
-    return hashlib.sha256(str(configured().resolve()).encode()).hexdigest()[:12]
+    # 0.2系のhost（普段のChromeに残った旧拡張が起動したもの）とパイプ名を分ける。
+    return hashlib.sha256(f"{configured().resolve()}\0dedicated-chrome".encode()).hexdigest()[:12]
 
 
 def _address() -> str:
@@ -86,7 +124,8 @@ def _key_path() -> Path:
     """名前付きパイプの相互認証鍵。ホストの稼働中だけ存在する。"""
     from ..paths import data_dir as configured
 
-    return configured() / "run" / "bridge.key"
+    # 0.2系のhostは終了時に自分の鍵ファイルを消すので、同じ名前を使わない。
+    return configured() / "run" / "dedicated-chrome.key"
 
 
 def _write_key() -> bytes:

@@ -4,6 +4,7 @@
 
 - ``data_dir()``: 端末共通の設定を置く場所
 - ``manifest_dir()``: Native Messaging hostのマニフェストを置く場所
+- ``legacy_manifest_dirs()``: 0.2系が普段のChrome向けにマニフェストを置いた場所（installが旧登録を消す）
 - ``host_executable(root)``: Chromeが起動するhostの実行ファイル
 - ``register_host(manifest)``: マニフェストをChromeへ知らせる（ファイル配置だけで済むOSは何もしない）
 - ``prepare_process()``: CLIの起動直後にOSの都合で必要な準備
