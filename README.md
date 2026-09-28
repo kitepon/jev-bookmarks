@@ -65,6 +65,8 @@ jev-bookmarks install --typesafe-env /path/to/typesafe.env --browser-env /path/t
 jev-bookmarks harness install
 ```
 
+更新する時は `git pull` のあとに `uv sync --locked`、`uv tool install --editable . --force`、`jev-bookmarks harness install` を実行します。Windowsでは、`run` が起動したBrowser Harnessの常駐プロセス（`uv\tools\jev-bookmarks\Scripts\python.exe -m browser_harness.daemon`）が動いている間は入れ直しに失敗するので、先に終了させてください。次の `run` で起動し直します。
+
 `typesafe.env` には `TYPESAFE_API_KEY`、ブラウザ用のenvファイルには上流が必要とするモデル設定を用意します。Chrome接続先はJev Bookmarksが所有するため、`BU_CDP_URL` や `BU_CDP_WS` は読み込みません。秘密の値をこのリポジトリに置かないでください。
 
 `install` は端末共通の設定とChrome Native Messaging hostを登録し、通常のGoogle ChromeをJev Bookmarks専用プロファイルで起動します。Chromeが発行したloopback CDP endpointから、固定IDの履歴拡張を専用プロファイルへ読み込み、Native Messaging hostとの接続まで確認します。手動でデベロッパーモードを有効にする操作はありません。拡張は `history` と `nativeMessaging` の権限を使います。完了時の `status` で `history_connected: true` を確認できます。
