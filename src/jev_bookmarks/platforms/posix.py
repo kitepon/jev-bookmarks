@@ -9,7 +9,6 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
-
 # 0.2系のhost（普段のChromeに残った旧拡張が起動したもの）と待受先を分ける。
 CHANNEL = "dedicated-chrome"
 

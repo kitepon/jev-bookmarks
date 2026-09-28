@@ -97,7 +97,8 @@ def test_linux_chrome_opens_in_the_logged_in_desktop_session(monkeypatch):
     monkeypatch.setattr(linux, "_user_manager_has_display", lambda environment: True)
     monkeypatch.setattr(linux.subprocess, "Popen", lambda command, **options: launched.append(command))
     linux.launch_chrome(Path("/usr/bin/google-chrome"), ["--user-data-dir=/p"])
-    assert launched == [["systemd-run", "--user", "--collect", "--quiet", "--", "/usr/bin/google-chrome", "--user-data-dir=/p"]]
+    systemd = ["systemd-run", "--user", "--collect", "--quiet", "--"]
+    assert launched == [[*systemd, "/usr/bin/google-chrome", "--user-data-dir=/p"]]
 
     launched.clear()
     monkeypatch.setattr(linux, "_user_manager_has_display", lambda environment: False)
