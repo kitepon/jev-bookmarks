@@ -1,5 +1,9 @@
 # 変更履歴
 
+## 0.3.3 — 選択欄のあるページで操作が拒否される問題を直す
+
+- 依存するjev-ultrafastのフォークを `fd1a70b` に上げた。ラベルの無い選択欄の名前に全選択肢の文字列が入り、選択肢ごとの操作ラベルもそれを含むので、TypeSafeへの要求が選択肢数の2乗で大きくなっていた。67項目の地域選択欄があるページでは約360KBになり、`max_tokens_exceeded`（HTTP 400）で拒否されて `BrowserUseError` になっていた。
+
 ## 0.3.2 — 専用ChromeをWindowsとLinuxへ適合
 
 - Linux: SSHやハーネスの実行環境に画面の変数（`WAYLAND_DISPLAY`・`DISPLAY`）が無いと専用Chromeが起動できなかった。ログイン中の画面セッションを持つユーザーのsystemdから（`systemd-run --user`）起動する。画面セッションが無い時は、15秒待たずに理由を示して止まる。
