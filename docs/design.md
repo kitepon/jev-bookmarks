@@ -66,7 +66,7 @@ sequenceDiagram
 | TypeSafe Jev | 有限個のURL候補から選び、操作後のページが目的に役立つかを判定する。 |
 | 上流 `jev-ultrafast` | 開始URLと目的を受け取り、Browser Harness経由でChromeを観測・操作する。各操作の選択は上流ループが所有する。上流 browser-use/jev-ultrafast に私たちの修正が入るまでは、フォーク quolu/jev-ultrafast の確認済みの版をコミットで固定して使う。上流に入ったら上流へ戻す。 |
 
-Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。拡張は要求時に履歴を検索して結果を返す。
+Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。hostは専用拡張のoriginから起動された時だけ待ち受け、待受先と鍵ファイルは0.2系（普段のChromeへ読み込んでいた旧拡張）のものと分ける。普段のChromeに旧拡張が残っていても、専用Chromeの接続を横取りしない。`install` は0.2系が普段のChrome向けに置いたマニフェストを消す。拡張は要求時に履歴を検索して結果を返す。
 
 Jev Bookmarksは通常のGoogle Chromeを端末共通データ配下の専用 `user-data-dir` で起動する。Chromeが書いた `DevToolsActivePort` を検証し、そのloopback endpointから固定IDの履歴拡張を起動ごとに読み込む。同じendpointを `BU_CDP_URL`、専用名 `jev-bookmarks` を `BU_NAME` として上流へ渡す。モデル設定ファイルにあるCDP endpointは読まない。これにより、履歴を持つプロファイルと `jev-ultrafast` が操作するプロファイルの一致を製品が所有する。電話帳から入口が選べれば履歴検索は行わないが、起動時には専用拡張との接続を確認する。接続できなければ `BrowserSetupError`、履歴要求の失敗は `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
 
@@ -74,7 +74,7 @@ Jev Bookmarksは通常のGoogle Chromeを端末共通データ配下の専用 `u
 
 共通コードは今のOSやハーネスで分岐しない。OSごとの違いは `platforms/` の一つのファイルに、ハーネスごとの違いは `harnesses/` の一つのファイルに閉じる。
 
-- OS適合（`platforms/macos.py`・`windows.py`・`linux.py`）: 端末共通データの場所、Native Messagingマニフェストの置き場と登録、hostの実行ファイル、履歴接続のローカルIPC（待受と要求）、標準Chromeの探索と起動、CLI起動時の準備を持つ。WindowsはCLIをUTF-8モードで起動し直し、ハーネスへ返すJSONと読み書きするファイルをUTF-8にそろえる。
+- OS適合（`platforms/macos.py`・`windows.py`・`linux.py`）: 端末共通データの場所、Native Messagingマニフェストの置き場と登録、hostの実行ファイル、履歴接続のローカルIPC（待受と要求）、標準Chromeの探索と起動、CLI起動時の準備を持つ。LinuxはChromeをログイン中の画面セッションを持つユーザーのsystemdから（`systemd-run --user`）起動し、SSHやハーネスの実行環境に画面の変数が無くても開けるようにする。systemdが使えない時は、今の環境に画面の変数がある場合だけ直接起動する。WindowsはChromeをWMI（`Win32_Process.Create`）から起動する。Grok Buildのようにコマンド終了時に子孫プロセスを止めるハーネスや、ジョブごと止めるSSHから呼ばれても、Chromeは呼び出し元の子孫にもジョブにも入らない。macOSは `open` でLaunchServicesから起動する。WindowsはCLIをUTF-8モードで起動し直し、ハーネスへ返すJSONと読み書きするファイルをUTF-8にそろえる。
 - ハーネス適合（`harnesses/claude.py`・`codex.py`・`cursor.py`・`grok.py`）: 親AIとなるハーネスに `run` の呼び方を教えるスキルの置き場と、そのハーネスでの実行上の注意（タイムアウト、サンドボックス）を持つ。スキル本文の共通部分は `harnesses/skill.md`。`jev-bookmarks harness install` が入れ、既存の自作スキルは上書きしない。
 
 ## 候補の選び方
@@ -133,6 +133,8 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 - Jevが役立つ・役立たないをどの程度正しく判定するか。機密情報を絞ったページ状態で足りるか。
 - 保存したページURLの再利用性と、クエリに状態を含むページの扱い。
 
-WindowsではChrome履歴から拡張・名前付きパイプ経由で候補80件を、Linuxでは試験用プロファイルで拡張・Unixソケット経由の往復を確認した。Claude Code・Codex・Cursor・Grok Buildの4ハーネスがスキルを認識することも確かめた。
+0.3.2では、macOS・Windows・Linuxの3端末で、専用Chromeを閉じた状態から `install` と `run`（電話帳の入口→1操作→有用性判定→保存）を通した。Linuxは画面の変数が無いSSHから、Windowsは対話ログオンのデスクトップとSSHの両方から確認した。各端末で専用Chromeを閉じてから、Claude Code・Codex・Cursor・Grok Buildの非対話実行でスキル経由の `run` を一度ずつ呼び、11通りで完了とハーネス終了後の専用Chrome・履歴接続の維持を確かめた（WindowsのClaude Codeは端末のログイン切れで未確認）。普段のChromeに0.2系の拡張とhostが残ったWindowsでも、専用Chromeの履歴接続が通ることを確認した。
 
-MFの他の目的についての候補再現率と判定精度、WindowsとLinuxでのTypeSafeとブラウザ操作を含む `run` 全体はまだ確認していない。
+旧版では、WindowsではChrome履歴から拡張・名前付きパイプ経由で候補80件を、Linuxでは試験用プロファイルで拡張・Unixソケット経由の往復を確認した。Claude Code・Codex・Cursor・Grok Buildの4ハーネスがスキルを認識することも確かめた。
+
+MFの他の目的についての候補再現率と判定精度、専用プロファイルでログインが必要な実サイトの `run` はまだ確認していない。

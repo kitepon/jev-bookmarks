@@ -18,6 +18,10 @@ def manifest_dir() -> Path:
     return configured() / "chrome-profile" / "NativeMessagingHosts"
 
 
+def legacy_manifest_dirs() -> list[Path]:
+    return [Path.home() / "Library" / "Application Support" / "Google" / "Chrome" / "NativeMessagingHosts"]
+
+
 def host_executable(root: Path) -> Path:
     host = root / "bin" / "native-host"
     if not os.access(host, os.X_OK):

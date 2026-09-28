@@ -9,9 +9,12 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
+# 0.2系のhost（普段のChromeに残った旧拡張が起動したもの）と待受先を分ける。
+CHANNEL = "dedicated-chrome"
+
 
 def socket_path(data_dir: Path) -> Path:
-    identity = hashlib.sha256(str(data_dir.resolve()).encode()).hexdigest()[:12]
+    identity = hashlib.sha256(f"{data_dir.resolve()}\0{CHANNEL}".encode()).hexdigest()[:12]
     return Path("/tmp") / f"jev-bookmarks-{os.getuid()}-{identity}" / "bridge.sock"
 
 

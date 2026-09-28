@@ -27,10 +27,11 @@ def extension_directory() -> Path:
     return data_dir() / "extension"
 
 
-def _write(path: Path, content: str) -> None:
+def _write(path: Path, content: bytes) -> None:
     fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}-", dir=path.parent)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        # バイト列のまま書き、Windowsでも改行を変えずに元の拡張ファイルと同じ内容で置く。
+        with os.fdopen(fd, "wb") as handle:
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
@@ -49,8 +50,8 @@ def install_extension() -> Path:
     manifest = json.loads((source / "manifest.json").read_text(encoding="utf-8"))
     manifest["key"] = DEDICATED_EXTENSION_KEY
     manifest["name"] = "Jev Bookmarks 専用Chrome履歴接続"
-    _write(target / "manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
-    _write(target / "background.js", (source / "background.js").read_text(encoding="utf-8"))
+    _write(target / "manifest.json", (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    _write(target / "background.js", (source / "background.js").read_bytes())
     return target
 
 
@@ -82,4 +83,7 @@ def install_native_host() -> Path:
         if os.path.exists(temp_name):
             os.unlink(temp_name)
     system.register_host(target)
+    # 普段のChromeに残った旧拡張が、専用Chromeと同じhostを起動し続けないようにする。
+    for legacy in system.legacy_manifest_dirs():
+        (legacy / f"{HOST_NAME}.json").unlink(missing_ok=True)
     return target

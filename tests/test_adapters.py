@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from jev_bookmarks.platforms import linux, macos, windows
 OS_CONTRACT = {
     "data_dir",
     "manifest_dir",
+    "legacy_manifest_dirs",
     "host_executable",
     "register_host",
     "prepare_process",
@@ -62,3 +64,63 @@ def test_skill_install_keeps_a_foreign_skill(home: Path):
     assert foreign.read_text(encoding="utf-8") == "自作のスキル\n"
     with pytest.raises(harnesses.HarnessError, match="未対応のハーネス"):
         harnesses.install(["vim"])
+
+
+def test_native_host_install_drops_the_normal_chrome_registration(tmp_path: Path, monkeypatch):
+    from jev_bookmarks import install
+
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    (legacy / f"{install.HOST_NAME}.json").write_text("{}", encoding="utf-8")
+    (legacy / "other.host.json").write_text("{}", encoding="utf-8")
+    registered = []
+
+    class Platform:
+        manifest_dir = staticmethod(lambda: tmp_path / "profile" / "NativeMessagingHosts")
+        legacy_manifest_dirs = staticmethod(lambda: [legacy])
+        host_executable = staticmethod(lambda root: Path(install.__file__))
+        register_host = staticmethod(registered.append)
+
+    monkeypatch.setattr(install.platforms, "current", lambda: Platform)
+    target = install.install_native_host()
+    assert registered == [target]
+    assert not (legacy / f"{install.HOST_NAME}.json").exists()
+    assert (legacy / "other.host.json").exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linuxの起動経路はPOSIXの端末で確かめる")
+def test_linux_chrome_opens_in_the_logged_in_desktop_session(monkeypatch):
+    launched = []
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    monkeypatch.delenv("DISPLAY", raising=False)
+    monkeypatch.setattr(linux.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(linux, "_user_manager_has_display", lambda environment: True)
+    monkeypatch.setattr(linux.subprocess, "Popen", lambda command, **options: launched.append(command))
+    linux.launch_chrome(Path("/usr/bin/google-chrome"), ["--user-data-dir=/p"])
+    systemd = ["systemd-run", "--user", "--collect", "--quiet", "--"]
+    assert launched == [[*systemd, "/usr/bin/google-chrome", "--user-data-dir=/p"]]
+
+    launched.clear()
+    monkeypatch.setattr(linux, "_user_manager_has_display", lambda environment: False)
+    with pytest.raises(RuntimeError, match="画面のセッション"):
+        linux.launch_chrome(Path("/usr/bin/google-chrome"), [])
+    monkeypatch.setenv("DISPLAY", ":0")
+    linux.launch_chrome(Path("/usr/bin/google-chrome"), [])
+    assert launched == [["/usr/bin/google-chrome"]]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windowsの起動経路はWindowsの端末で確かめる")
+def test_windows_chrome_is_created_outside_the_caller(monkeypatch):
+    calls = []
+
+    class Completed:
+        returncode = 0
+
+    def run(command, **options):
+        calls.append(options["env"]["JEV_BOOKMARKS_CHROME"])
+        return Completed()
+
+    monkeypatch.setattr(windows.subprocess, "run", run)
+    monkeypatch.setattr(windows.subprocess, "Popen", lambda *args, **options: pytest.fail("直接起動した"))
+    windows.launch_chrome(Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"), ["--user-data-dir=C:\\p q"])
+    assert calls == ['"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" "--user-data-dir=C:\\p q"']

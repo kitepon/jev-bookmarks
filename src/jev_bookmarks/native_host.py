@@ -4,6 +4,7 @@ import threading
 import uuid
 
 from . import platforms
+from .install import extension_id
 
 
 class Bridge:
@@ -85,6 +86,9 @@ def _read_native_messages(bridge: Bridge) -> None:
 
 
 def main() -> None:
+    # 普段のChromeに残った旧拡張からも起動されうる。専用Chromeの拡張以外には履歴接続を開かない。
+    if sys.argv[1:2] != [f"chrome-extension://{extension_id()}/"]:
+        sys.exit(1)
     bridge = Bridge()
     platforms.current().serve(lambda raw: answer(bridge, raw), lambda: _read_native_messages(bridge))
 
