@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from jev_bookmarks import history_bridge, phonebook, runner, typesafe
+from jev_bookmarks import browser, history_bridge, phonebook, runner, settings, typesafe
+from jev_bookmarks.install import DEDICATED_EXTENSION_KEY, extension_id, install_extension, project_root
 from jev_bookmarks.paths import ProjectHomeError, phonebook_path
 
 
@@ -20,6 +21,92 @@ def test_phonebook_records_only_confirmed_page(tmp_path: Path):
     assert phonebook.read(path)[0]["url"] == "https://example.com/accounts"
     assert phonebook.forget("https://example.com/accounts", path) == 1
     assert phonebook.read(path) == []
+
+
+def test_install_builds_a_dedicated_extension_identity(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
+    target = install_extension()
+    installed = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
+    source = json.loads((project_root() / "extension" / "manifest.json").read_text(encoding="utf-8"))
+    assert installed["key"] == DEDICATED_EXTENSION_KEY
+    assert installed["key"] != source["key"]
+    assert browser._id_from_key(installed["key"]) == extension_id()
+    assert (target / "background.js").read_bytes() == (project_root() / "extension" / "background.js").read_bytes()
+
+
+def test_browser_owns_profile_endpoint_and_harness_runtime(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
+    monkeypatch.setenv("BU_CDP_WS", "ws://wrong.example")
+    install_extension()
+    state = {"endpoint": None}
+    launched = []
+
+    class Platform:
+        @staticmethod
+        def browser_runtime_dir():
+            return tmp_path / "runtime"
+
+        @staticmethod
+        def chrome_executable():
+            return tmp_path / "chrome"
+
+        @staticmethod
+        def launch_chrome(executable, arguments):
+            launched.append(arguments)
+            state["endpoint"] = "http://127.0.0.1:9333"
+
+    monkeypatch.setattr(browser.platforms, "current", lambda: Platform)
+    monkeypatch.setattr(browser, "_endpoint", lambda: state["endpoint"])
+    monkeypatch.setattr(history_bridge, "available", lambda: True)
+    result = browser.prepare(history_timeout=0)
+    assert result["browser_running"] and result["history_connected"]
+    assert f"--user-data-dir={browser.profile_directory()}" in launched[0]
+    assert not any(argument.startswith("--load-extension=") for argument in launched[0])
+    assert os.environ["BU_NAME"] == "jev-bookmarks"
+    assert os.environ["BU_CDP_URL"] == "http://127.0.0.1:9333"
+    assert os.environ["BH_RUNTIME_DIR"] == str(tmp_path / "runtime")
+    assert "BU_CDP_WS" not in os.environ
+
+
+def test_install_opens_setup_without_claiming_history_connection(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
+    install_extension()
+    launched = []
+
+    class Platform:
+        @staticmethod
+        def browser_runtime_dir():
+            return tmp_path / "runtime"
+
+        @staticmethod
+        def chrome_executable():
+            return tmp_path / "chrome"
+
+        @staticmethod
+        def launch_chrome(executable, arguments):
+            launched.append(arguments)
+
+    monkeypatch.setattr(browser.platforms, "current", lambda: Platform)
+    monkeypatch.setattr(browser, "_endpoint", lambda: None if not launched else "http://127.0.0.1:9333")
+    monkeypatch.setattr(browser, "_open_setup_page", lambda endpoint: launched.append([endpoint, "chrome://extensions/"]))
+    monkeypatch.setattr(history_bridge, "available", lambda: False)
+    result = browser.install()
+    assert result["history_connected"] is False
+    assert launched[1] == ["http://127.0.0.1:9333", "chrome://extensions/"]
+
+
+def test_browser_env_cannot_override_owned_chrome(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("TEXT_MODEL", raising=False)
+    monkeypatch.delenv("BU_CDP_URL", raising=False)
+    typesafe_env = tmp_path / "typesafe.env"
+    browser_env = tmp_path / "browser.env"
+    typesafe_env.write_text("TYPESAFE_API_KEY=test\n", encoding="utf-8")
+    browser_env.write_text("TEXT_MODEL=test-model\nBU_CDP_URL=http://127.0.0.1:9999\n", encoding="utf-8")
+    settings.save_env_paths(typesafe_env, browser_env)
+    settings.load_environment()
+    assert os.environ["TEXT_MODEL"] == "test-model"
+    assert "BU_CDP_URL" not in os.environ
 
 
 def test_phonebook_write_failure_keeps_previous_entry(tmp_path: Path, monkeypatch):
@@ -130,7 +217,7 @@ def test_unhelpful_page_returns_to_parent_without_saving(monkeypatch):
         def run(self):
             yield {"status": "blocked", "history": []}
 
-    monkeypatch.setattr(runner, "Agent", Agent)
+    monkeypatch.setattr(runner, "_agent", Agent)
     monkeypatch.setattr(runner, "_phonebook_candidates", lambda goal: [])
     monkeypatch.setattr(history_bridge, "search", lambda goal: [{"url": "https://example.com/", "title": "Example"}])
     monkeypatch.setattr(
@@ -152,7 +239,7 @@ def test_browser_failure_is_reported_as_external_error(monkeypatch):
         def __init__(self, *_args):
             raise RuntimeError("Chromeに接続できません")
 
-    monkeypatch.setattr(runner, "Agent", FailedAgent)
+    monkeypatch.setattr(runner, "_agent", FailedAgent)
     monkeypatch.setattr(
         runner,
         "_phonebook_candidates",

@@ -1,12 +1,16 @@
 from urllib.parse import urlparse
 
-from jev_ultrafast import Agent
-
 from . import history_bridge, phonebook, typesafe
 
 
 class BrowserUseError(RuntimeError):
     pass
+
+
+def _agent(url: str, goal: str):
+    from jev_ultrafast import Agent
+
+    return Agent(url, goal)
 
 
 def _phonebook_candidates(goal: str) -> list[dict]:
@@ -45,7 +49,7 @@ def run(goal: str) -> dict:
         return {"status": "no_entry", "goal": goal, "saved": False}
 
     try:
-        with Agent(selected["url"], goal) as agent:
+        with _agent(selected["url"], goal) as agent:
             final_state = agent.snapshot()
             for final_state in agent.run():
                 pass

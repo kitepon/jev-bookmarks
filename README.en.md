@@ -4,7 +4,7 @@
 
 Jev Bookmarks is a CLI that finds a starting page in your Chrome history, lets Jev operate the browser, and keeps only pages Jev judged useful in a small, project-scoped address book.
 
-**Status:** preview for macOS, Windows, and Linux, callable from Claude Code, Codex, Cursor, and Grok Build. The Chrome extension is currently loaded as an unpacked extension.
+**Status:** preview for macOS, Windows, and Linux, callable from Claude Code, Codex, Cursor, and Grok Build. History and browser operation use the same dedicated Chrome profile owned by Jev Bookmarks. The extension is loaded once as an unpacked extension.
 
 ## After setup
 
@@ -18,7 +18,7 @@ The command first checks `<git-root>/jev-bookmark/bookmarks.json`, then asks the
 
 ## Install (macOS, Windows, Linux)
 
-You need Python 3.12, `uv`, Git, Google Chrome, a TypeSafe API key, and a working `jev-ultrafast` browser and model configuration.
+You need Python 3.12, `uv`, Git, Google Chrome, a TypeSafe API key, and a working `jev-ultrafast` model configuration.
 
 ```sh
 git clone https://github.com/kitepon/jev-bookmarks.git
@@ -31,7 +31,11 @@ jev-bookmarks install \
 jev-bookmarks harness install
 ```
 
-Put `TYPESAFE_API_KEY` in `typesafe.env` and the upstream browser/model settings in the other env file. Do not commit either file. Open `chrome://extensions` in the Chrome profile you use, enable Developer mode, and load this repository's `extension/` directory. Check that the extension ID matches the output of `install`. Configure upstream Browser Use to operate that same Chrome profile.
+Put `TYPESAFE_API_KEY` in `typesafe.env` and the upstream model settings in the other env file. Jev Bookmarks owns the Chrome endpoint and ignores `BU_CDP_URL` and `BU_CDP_WS` from that file. Do not commit either file.
+
+`install` starts regular Google Chrome with a dedicated Jev Bookmarks profile and opens `chrome://extensions`. Enable Developer mode and load the printed `extension_directory` as an unpacked extension. Its ID must match `extension_id`. A first result of `setup_required` is expected; after loading the extension, `status` should report `history_connected: true`.
+
+The dedicated profile does not share cookies, logins, or history with everyday Chrome. Sign in to the required sites in that window. Later `run` calls reconnect both `jev-ultrafast` and history search to that exact profile under the dedicated `jev-bookmarks` Browser Harness name.
 
 From your Git project, use `jev-bookmarks run`, `list`, or `forget <url>`. `jev-bookmarks status` reports whether the local history host is listening; a `run` checks the full history request path. On Windows, `install` also registers the host manifest under `HKCU\Software\Google\Chrome\NativeMessagingHosts`.
 
@@ -44,6 +48,6 @@ Shared code, OS adaptation (`src/jev_bookmarks/platforms/`), and harness adaptat
 - The project address book stores the goal, full observed URL, title, and time locally. Its JSON and temporary files are ignored by Git. Old machine-wide address books are not migrated automatically.
 - Full Chrome history is not copied to disk. Jev receives at most 80 candidate titles and host/path displays for URL selection. A portion of the observed page text is sent to TypeSafe for usefulness judgment. The upstream browser agent uses the model connection configured for it.
 - URLs and visible page text can contain sensitive information. Inspect the providers and data sent before using private pages. Never paste real account pages or keys into public issues.
-- macOS has been exercised end to end with real Chrome history. On Windows the real-history round trip through the extension and named pipe, and on Linux the round trip through the extension and Unix socket in a test profile, have been verified; a full `run` with TypeSafe and browser operation has not yet been verified there. All four harnesses were checked to see the skill on all three OSes.
+- The previous macOS path was exercised end to end with real Chrome history. The dedicated-profile launch, private CDP endpoint, and Browser Harness routing were verified by observing a public page through `jev-ultrafast.Agent`; a new end-to-end run on a signed-in dedicated profile remains. On Windows the real-history round trip through the extension and named pipe, and on Linux the round trip through the extension and Unix socket in a test profile, have been verified; a full `run` with TypeSafe and browser operation has not yet been verified there. All four harnesses were checked to see the skill on all three OSes.
 
 For the full walkthrough, evidence, and current limitations, see the [Japanese README](README.md). Bug reports and contributions are welcome through [Issues](https://github.com/kitepon/jev-bookmarks/issues) and [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md). Licensed under the [MIT License](LICENSE).

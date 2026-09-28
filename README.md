@@ -9,7 +9,7 @@
 
 [English summary](README.en.md) · [設計と受入条件](docs/design.md)
 
-**プレビュー版です。** macOS・Windows・Linuxで動き、Claude Code・Codex・Cursor・Grok Buildから呼べます。Chrome拡張は開発者モードで読み込みます。
+**プレビュー版です。** macOS・Windows・Linuxで動き、Claude Code・Codex・Cursor・Grok Buildから呼べます。履歴取得とブラウザ操作には、Jev Bookmarksが起動する同じ専用Chromeプロファイルを使います。Chrome拡張は初回だけ開発者モードで読み込みます。
 
 ## 使い方を30秒で
 
@@ -54,7 +54,7 @@ flowchart LR
 
 ## 導入
 
-Python 3.12、`uv`、Git、Google Chrome、[TypeSafe](https://docs.typesafe.ai/)のAPIキー、[jev-ultrafast](https://github.com/browser-use/jev-ultrafast)が使うブラウザ接続とモデル設定が必要です。jev-ultrafastは、上流に修正が入るまで[フォーク](https://github.com/quolu/jev-ultrafast)の版を使います（`uv sync` で自動的に入ります）。手順はmacOS・Windows・Linuxで同じです（Windowsは PowerShell で実行します）。
+Python 3.12、`uv`、Git、Google Chrome、[TypeSafe](https://docs.typesafe.ai/)のAPIキー、[jev-ultrafast](https://github.com/browser-use/jev-ultrafast)が使うモデル設定が必要です。jev-ultrafastは、上流に修正が入るまで[フォーク](https://github.com/quolu/jev-ultrafast)の版を使います（`uv sync` で自動的に入ります）。手順はmacOS・Windows・Linuxで同じです（Windowsは PowerShell で実行します）。
 
 ```sh
 git clone https://github.com/kitepon/jev-bookmarks.git
@@ -65,9 +65,11 @@ jev-bookmarks install --typesafe-env /path/to/typesafe.env --browser-env /path/t
 jev-bookmarks harness install
 ```
 
-`typesafe.env` には `TYPESAFE_API_KEY`、ブラウザ用のenvファイルには上流が必要とするモデル設定とChromeへの接続設定を用意します。秘密の値をこのリポジトリに置かないでください。`install` は端末共通の設定とChrome Native Messaging hostを登録し、拡張ディレクトリと固定拡張IDを表示します。Windowsではマニフェストの場所を `HKCU\Software\Google\Chrome\NativeMessagingHosts\ai.jevbookmarks.history` に登録します。
+`typesafe.env` には `TYPESAFE_API_KEY`、ブラウザ用のenvファイルには上流が必要とするモデル設定を用意します。Chrome接続先はJev Bookmarksが所有するため、`BU_CDP_URL` や `BU_CDP_WS` は読み込みません。秘密の値をこのリポジトリに置かないでください。
 
-普段使うChromeの `chrome://extensions` でデベロッパーモードを有効にし、このリポジトリの `extension/` を「パッケージ化されていない拡張機能」として読み込みます。表示されたIDが `install` の出力と一致することを確認してください。拡張は `history` と `nativeMessaging` の権限を使います。上流のBrowser Useも同じChromeプロファイルへ接続する設定が必要です。
+`install` は端末共通の設定とChrome Native Messaging hostを登録し、通常のGoogle ChromeをJev Bookmarks専用プロファイルで起動して `chrome://extensions/` を開きます。そこでデベロッパーモードを有効にし、出力された `extension_directory` を「パッケージ化されていない拡張機能」として読み込みます。表示されたIDが `extension_id` と一致すれば初期設定は完了です。拡張は `history` と `nativeMessaging` の権限を使います。初回の出力が `setup_required` でも異常ではなく、読込み後の `status` で `history_connected: true` を確認できます。
+
+専用Chromeは普段使うChromeと履歴・Cookie・ログイン状態を共有しません。必要なサイトへこのウィンドウからログインし、普段のBrowser Useもこのウィンドウに任せます。以後、`run` は専用Chromeを起動し、専用名のBrowser Harnessへ接続します。利用者の `default` Harnessや普段使うChromeへは接続しません。旧版の履歴拡張を普段使うChromeへ読み込んでいた場合は削除できます。
 
 ```sh
 cd /path/to/your-project
@@ -103,7 +105,7 @@ jev-bookmarks forget 'https://example.com/'
 
 | 環境 | 状態 |
 | --- | --- |
-| macOS + Google Chrome | 実履歴とログイン済みページで一回の `run` を確認済み |
+| macOS + Google Chrome | 専用プロファイル、専用Harness、公開ページの観測を確認済み。ログイン済みページでの再確認待ち |
 | Windows 11 + Google Chrome | 実Chrome履歴→拡張→名前付きパイプ→CLIの往復を確認済み |
 | Linux (Ubuntu 26.04) + Google Chrome | 試験用プロファイルで拡張→Unixソケット→CLIの往復を確認済み |
 
@@ -116,11 +118,13 @@ WindowsとLinuxでは、TypeSafeとブラウザ操作まで含めた `run` の�
 <details>
 <summary>実機確認と既知の限界</summary>
 
-このMacのChromeに拡張を読み込み、実履歴から80件へ絞った候補を取得した。空の電話帳からURL選択、ブラウザ操作、操作後の再観測、Jevの判定、URL保存まで一回の `run` で確認した。MFクラウド会計の登録済み口座一覧と明細一覧でも目的に合うページを選べた。履歴検索を使わない電話帳の再利用と、役立たないページを保存しない動作も確認した。
+旧版では、このMacの普段使うChromeから実履歴を取得し、空の電話帳からURL選択、ブラウザ操作、操作後の再観測、Jevの判定、URL保存まで一回の `run` で確認した。MFクラウド会計の登録済み口座一覧と明細一覧でも目的に合うページを選べた。履歴検索を使わない電話帳の再利用と、役立たないページを保存しない動作も確認した。
+
+0.3.0では、通常Chromeの専用プロファイルをJev Bookmarksが起動し、そのCDP endpointと専用Browser Harness名を強制した。実際に `jev-ultrafast.Agent` から公開ページのURLとタイトルを観測できた。履歴拡張も同じ専用プロファイルだけに置く。専用プロファイルでログインが必要な実サイトの `run` は再確認待ち。
 
 二つの一時Gitプロジェクトを作り、片方のサブディレクトリからの実行でそのプロジェクトだけに電話帳ができることを実機で確認した。1万件超の履歴を模した試験では、期間を分割して古い一致ページを取得し、Jevへ渡す候補を80件に制限した。
 
-WindowsとLinuxでの `run` 全体、MFの幅広い目的での判定精度は未検証です。Chrome履歴を読むプロファイルとBrowser Useが操作するプロファイルの一致も、設定上の要件として残ります。
+WindowsとLinuxでの `run` 全体、MFの幅広い目的での判定精度は未検証です。
 
 </details>
 
@@ -132,7 +136,7 @@ WindowsとLinuxでの `run` 全体、MFの幅広い目的での判定精度は�
 
 | 区分 | ファイル |
 | --- | --- |
-| 共通 | `cli.py`、`runner.py`、`typesafe.py`、`phonebook.py`、`settings.py`、`paths.py`、`install.py`、`native_host.py`、`history_bridge.py` |
+| 共通 | `cli.py`、`browser.py`、`runner.py`、`typesafe.py`、`phonebook.py`、`settings.py`、`paths.py`、`install.py`、`native_host.py`、`history_bridge.py` |
 | OS適合 | `platforms/macos.py`、`platforms/windows.py`、`platforms/linux.py`（macOSとLinuxのUnixソケットは `platforms/posix.py`） |
 | ハーネス適合 | `harnesses/claude.py`、`harnesses/codex.py`、`harnesses/cursor.py`、`harnesses/grok.py`（スキルの共通本文は `harnesses/skill.md`） |
 

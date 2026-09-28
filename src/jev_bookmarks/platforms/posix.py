@@ -15,6 +15,10 @@ def socket_path(data_dir: Path) -> Path:
     return Path("/tmp") / f"jev-bookmarks-{os.getuid()}-{identity}" / "bridge.sock"
 
 
+def browser_runtime_dir(data_dir: Path) -> Path:
+    return socket_path(data_dir).parent / "browser-harness"
+
+
 def _prepare_socket(path: Path) -> str:
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     if path.parent.stat().st_uid != os.getuid() or stat.S_IMODE(path.parent.stat().st_mode) != 0o700:

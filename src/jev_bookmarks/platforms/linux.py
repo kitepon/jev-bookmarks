@@ -1,6 +1,8 @@
 """Linux: Google ChromeはXDG設定のNativeMessagingHostsフォルダーからマニフェストを読む。"""
 
 import os
+import shutil
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -12,7 +14,9 @@ def data_dir() -> Path:
 
 
 def manifest_dir() -> Path:
-    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "google-chrome" / "NativeMessagingHosts"
+    from ..paths import data_dir as configured
+
+    return configured() / "chrome-profile" / "NativeMessagingHosts"
 
 
 def host_executable(root: Path) -> Path:
@@ -28,6 +32,29 @@ def register_host(manifest: Path) -> None:
 
 def prepare_process() -> None:
     pass
+
+
+def browser_runtime_dir() -> Path:
+    from ..paths import data_dir as configured
+
+    return posix.browser_runtime_dir(configured())
+
+
+def chrome_executable() -> Path:
+    for command in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
+        if executable := shutil.which(command):
+            return Path(executable)
+    raise RuntimeError("ChromeまたはChromiumがありません。OSの公式パッケージ管理で導入してください")
+
+
+def launch_chrome(executable: Path, arguments: list[str]) -> None:
+    subprocess.Popen(
+        [str(executable), *arguments],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
 
 
 def _socket() -> Path:

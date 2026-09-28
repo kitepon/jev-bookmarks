@@ -7,6 +7,9 @@
 - ``host_executable(root)``: Chromeが起動するhostの実行ファイル
 - ``register_host(manifest)``: マニフェストをChromeへ知らせる（ファイル配置だけで済むOSは何もしない）
 - ``prepare_process()``: CLIの起動直後にOSの都合で必要な準備
+- ``browser_runtime_dir()``: Jev Bookmarks専用Browser Harnessの実行時状態を置く場所
+- ``chrome_executable()``: OS標準の方法で導入されたChromeの実行ファイル
+- ``launch_chrome(executable, arguments)``: Chromeを専用プロファイルと引数で起動する
 - ``serve(answer, pump)``: 同じユーザーだけが使えるローカル接続を開き、``pump()`` が戻るまで要求に ``answer`` で答える
 - ``ask(request)``: その接続へ要求を一つ送り、応答を返す。失敗は ``ConnectionError`` か ``TimeoutError``
 - ``available()``: hostが待ち受けているかの目安

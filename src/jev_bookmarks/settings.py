@@ -10,8 +10,6 @@ KEYS = {
     "TEXT_MODEL_BASE_URL",
     "TEXT_MODEL",
     "TEXT_MODEL_REASONING",
-    "BU_CDP_URL",
-    "BU_CDP_WS",
 }
 
 

@@ -6,7 +6,17 @@ from jev_bookmarks import harnesses
 from jev_bookmarks.platforms import linux, macos, windows
 
 OS_CONTRACT = {
-    "data_dir", "manifest_dir", "host_executable", "register_host", "prepare_process", "serve", "ask", "available",
+    "data_dir",
+    "manifest_dir",
+    "host_executable",
+    "register_host",
+    "prepare_process",
+    "browser_runtime_dir",
+    "chrome_executable",
+    "launch_chrome",
+    "serve",
+    "ask",
+    "available",
 }
 
 

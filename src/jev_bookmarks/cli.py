@@ -3,8 +3,8 @@ import json
 import sys
 from pathlib import Path
 
-from . import harnesses, history_bridge, phonebook, platforms, typesafe
-from .install import extension_id, install_native_host, project_root
+from . import browser, harnesses, history_bridge, phonebook, platforms, runner, typesafe
+from .install import extension_id, install_extension, install_native_host
 from .paths import ProjectHomeError
 from .settings import load_environment, save_env_paths
 
@@ -15,7 +15,6 @@ def _print(payload: dict | list) -> None:
 
 def main() -> None:
     platforms.current().prepare_process()
-    from . import runner
 
     parser = argparse.ArgumentParser(prog="jev-bookmarks")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -38,13 +37,16 @@ def main() -> None:
     try:
         if args.command == "install":
             settings = save_env_paths(args.typesafe_env, args.browser_env)
+            extension = install_extension()
             host = install_native_host()
+            dedicated_browser = browser.install()
             _print({
-                "status": "installed",
+                "status": "installed" if dedicated_browser["history_connected"] else "setup_required",
                 "host_manifest": str(host),
                 "settings": str(settings),
-                "extension_directory": str(project_root() / "extension"),
+                "extension_directory": str(extension),
                 "extension_id": extension_id(),
+                "browser": dedicated_browser,
             })
         elif args.command == "harness" and args.action == "install":
             _print({"status": "installed", "harnesses": harnesses.install(args.names)})
@@ -52,8 +54,7 @@ def main() -> None:
             _print(harnesses.status())
         elif args.command == "status":
             _print({
-                "history_connected": history_bridge.available(),
-                "extension_id": extension_id(),
+                "browser": browser.status(),
                 "harnesses": harnesses.status(),
             })
         elif args.command == "list":
@@ -62,12 +63,14 @@ def main() -> None:
             _print({"removed": phonebook.forget(args.url)})
         elif args.command == "run":
             load_environment()
+            browser.prepare()
             _print(runner.run(args.goal))
     except (
         history_bridge.HistoryError,
         typesafe.TypeSafeError,
         phonebook.PhonebookError,
         runner.BrowserUseError,
+        browser.BrowserSetupError,
         harnesses.HarnessError,
         ProjectHomeError,
         FileNotFoundError,

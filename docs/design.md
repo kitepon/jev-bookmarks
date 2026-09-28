@@ -2,7 +2,7 @@
 
 ## 目的
 
-エージェントが「MFで登録済み口座を見たい」のような頼みごとを受けた時、普段使うChromeで実際に訪れたページから入口URLを選び、Browser Useまで一回で実行する。操作後にJevが役立つと判定したページを小さな電話帳へ残し、Chrome履歴から消えた後も再利用する。
+エージェントが「MFで登録済み口座を見たい」のような頼みごとを受けた時、Jev Bookmarks専用Chromeで実際に訪れたページから入口URLを選び、Browser Useまで一回で実行する。操作後にJevが役立つと判定したページを小さな電話帳へ残し、Chrome履歴から消えた後も再利用する。
 
 親AIは目的を一度だけ渡し、途中のURL選択・ブラウザ操作・記録判断に参加しない。Jev Bookmarksが上流 `jev-ultrafast` を呼び、結果まで一つの実行として返す。
 
@@ -15,7 +15,7 @@ sequenceDiagram
     participant 履歴 as Chrome拡張
     participant Jev as TypeSafe Jev
     participant 操作 as jev-ultrafast
-    participant Chrome as ログイン済みChrome
+    participant Chrome as ログイン済み専用Chrome
     親AI->>JB: run(目的)
     JB->>JB: 電話帳から開始URL候補を探す
     opt 電話帳に候補あり
@@ -59,19 +59,22 @@ sequenceDiagram
 
 | 部品 | 責務 |
 | --- | --- |
-| Chrome拡張 | 利用中のChromeプロファイルの履歴を正規の `chrome.history.search` で、要求時だけ読む。候補の絞り込みまでをChrome内で行う。 |
+| 専用Chrome管理 | OS標準のGoogle Chromeを製品専用プロファイルとCDP endpointで起動し、専用名のBrowser Harnessへ接続する。利用者の既定Harnessや普段使うChromeは選ばない。 |
+| Chrome拡張 | 専用Chromeプロファイルの履歴を正規の `chrome.history.search` で、要求時だけ読む。候補の絞り込みまでをChrome内で行う。 |
 | Native Messaging host | Chrome拡張とローカルコマンドを接続する。ブラウザの内部DBを読まない。 |
 | Jev Bookmarksのローカルコマンド | `run` の全工程、Jevへの問合せ、操作後の有用性判定、電話帳の永続化を所有する。別に一覧と削除を提供する。 |
 | TypeSafe Jev | 有限個のURL候補から選び、操作後のページが目的に役立つかを判定する。 |
 | 上流 `jev-ultrafast` | 開始URLと目的を受け取り、Browser Harness経由でChromeを観測・操作する。各操作の選択は上流ループが所有する。上流 browser-use/jev-ultrafast に私たちの修正が入るまでは、フォーク quolu/jev-ultrafast の確認済みの版をコミットで固定して使う。上流に入ったら上流へ戻す。 |
 
-Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。拡張は要求時に履歴を検索して結果を返す。拡張IDを固定してホスト側で許可し、Chrome起動中に要求を往復できることはmacOS・Windows・Linuxで実測した。履歴を持つChromeプロファイルと `jev-ultrafast` が操作するプロファイルが同じであることは利用時の設定要件であり、プロファイルIDの自動照合はない。電話帳から入口が選べれば履歴接続は使わない。履歴が必要な時に接続できなければ `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
+Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。拡張は要求時に履歴を検索して結果を返す。
+
+Jev Bookmarksは通常のGoogle Chromeを端末共通データ配下の専用 `user-data-dir` で起動する。そこへ固定IDの履歴拡張を初回だけ開発者モードで読み込む。Chromeが書いた `DevToolsActivePort` を検証し、そのloopback endpointを `BU_CDP_URL`、専用名 `jev-bookmarks` を `BU_NAME` として上流へ渡す。モデル設定ファイルにあるCDP endpointは読まない。これにより、履歴を持つプロファイルと `jev-ultrafast` が操作するプロファイルの一致を製品が所有する。電話帳から入口が選べれば履歴検索は行わないが、起動時には専用拡張との接続を確認する。接続できなければ `BrowserSetupError`、履歴要求の失敗は `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
 
 ## OSとハーネスへの適合
 
 共通コードは今のOSやハーネスで分岐しない。OSごとの違いは `platforms/` の一つのファイルに、ハーネスごとの違いは `harnesses/` の一つのファイルに閉じる。
 
-- OS適合（`platforms/macos.py`・`windows.py`・`linux.py`）: 端末共通データの場所、Native Messagingマニフェストの置き場と登録、hostの実行ファイル、履歴接続のローカルIPC（待受と要求）、CLI起動時の準備を持つ。WindowsはCLIをUTF-8モードで起動し直し、ハーネスへ返すJSONと読み書きするファイルをUTF-8にそろえる。
+- OS適合（`platforms/macos.py`・`windows.py`・`linux.py`）: 端末共通データの場所、Native Messagingマニフェストの置き場と登録、hostの実行ファイル、履歴接続のローカルIPC（待受と要求）、標準Chromeの探索と起動、CLI起動時の準備を持つ。WindowsはCLIをUTF-8モードで起動し直し、ハーネスへ返すJSONと読み書きするファイルをUTF-8にそろえる。
 - ハーネス適合（`harnesses/claude.py`・`codex.py`・`cursor.py`・`grok.py`）: 親AIとなるハーネスに `run` の呼び方を教えるスキルの置き場と、そのハーネスでの実行上の注意（タイムアウト、サンドボックス）を持つ。スキル本文の共通部分は `harnesses/skill.md`。`jev-bookmarks harness install` が入れ、既存の自作スキルは上書きしない。
 
 ## 候補の選び方
@@ -107,22 +110,24 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 - `run(goal)` → 観測ページ、上流の操作結果、Jevの有用性判定、電話帳への保存有無を返す。入口がなければ `no_entry`、外部境界の失敗は型付きエラーを返す。
 - `list` / `forget` → 電話帳を確認・削除する。
 
-履歴への権限はChrome拡張の `history`、ローカル連携は `nativeMessaging` に限る。履歴接続、TypeSafe、Browser Use、電話帳、プロジェクト検出の失敗はそれぞれ `HistoryError`、`TypeSafeError`、`BrowserUseError`、`PhonebookError`、`ProjectHomeError` としてJSONに表示し、CLIは終了コード1を返す。TypeSafeのAPIが失敗した時も候補を適当に一つ選ばない。`no_entry` ならサイト探索へ無言で切り替えず、親AIには一回の実行結果として返す。
+履歴への権限はChrome拡張の `history`、ローカル連携は `nativeMessaging` に限る。専用Chromeの準備、履歴要求、TypeSafe、Browser Use、電話帳、プロジェクト検出の失敗はそれぞれ `BrowserSetupError`、`HistoryError`、`TypeSafeError`、`BrowserUseError`、`PhonebookError`、`ProjectHomeError` としてJSONに表示し、CLIは終了コード1を返す。TypeSafeのAPIが失敗した時も候補を適当に一つ選ばない。`no_entry` ならサイト探索へ無言で切り替えず、親AIには一回の実行結果として返す。
 
 ## 最初の実装範囲と受入
 
 1. 親AIの一回の `run` 呼出しの後、URL選択・上流Browser Use・Jevによるページの有用性判定・保存まで内部で進む。親AIへの再判定依頼や結果報告の命令はない。
-2. 利用中のログイン済みChromeから正規APIで履歴を取得でき、同じプロファイルを上流Browser Useが操作する。内部SQLiteファイルへ直接依存しない。
+2. ログイン済みの専用Chromeから正規APIで履歴を取得でき、同じプロファイルを上流Browser Useが操作する。プロファイルとCDP endpointはJev Bookmarksが所有し、内部SQLiteファイルへ直接依存しない。
 3. 実履歴の約1万URLを対象にしても、Jevへ送るのは絞った候補だけで、全履歴の永続コピーを作らない。
 4. 実際のMFの頼みごと数件について、目的ページが候補に入り、上流が操作し、Jevが操作後のページを役立つ・役立たないに分ける。外れた場合は候補漏れ・URL選択違い・操作失敗・有用性の誤判定を分けて測る。
 5. 役立つと判定したページだけを保存する。役立たない場合はページと操作結果を親AIへ返し、電話帳は変更しない。保存したURLは次回、Chrome履歴に存在しなくても見つかる。
-6. Chrome切断、該当なし、TypeSafe障害、操作失敗、保存失敗をそれぞれ区別して表示する。電話帳の一覧と削除が使える。
+6. 専用Chromeの起動・拡張接続、履歴要求、該当なし、TypeSafe障害、操作失敗、保存失敗をそれぞれ区別して表示する。電話帳の一覧と削除が使える。
 
 最初の実装では履歴の常時監視、全履歴の同期、サイトマップ作成、サイト巡回、Browser Use本体の置換は行わない。候補漏れや誤選択が観測されたら、その実例を使って絞り込みと質問を直す。
 
 ## 実機確認と残る検証
 
-このMacのChromeに履歴拡張を読み込み、Native Messagingから実履歴の候補80件を取得した。空の電話帳から公開ページを履歴で選び、上流の操作後に同じタブを再観測し、Jevの有用性判定でURLを保存するまで一回の `run` で確認した。二つの一時Gitプロジェクトでは、片方のサブディレクトリからの一回実行でそのプロジェクトだけに電話帳が作られ、もう片方の電話帳は空だった。MFクラウド会計の口座一覧と明細一覧も、実履歴から該当ページを選び、操作後に役立つと判定した。電話帳からの再利用は履歴検索を遮断した条件で確認した。1万件超の履歴を模した試験では、期間分割で古い一致ページを取得し、Jevへの候補を80件に制限した。
+旧版では、このMacの普段使うChromeに履歴拡張を読み込み、Native Messagingから実履歴の候補80件を取得した。空の電話帳から公開ページを履歴で選び、上流の操作後に同じタブを再観測し、Jevの有用性判定でURLを保存するまで一回の `run` で確認した。二つの一時Gitプロジェクトでは、片方のサブディレクトリからの一回実行でそのプロジェクトだけに電話帳が作られ、もう片方の電話帳は空だった。MFクラウド会計の口座一覧と明細一覧も、実履歴から該当ページを選び、操作後に役立つと判定した。電話帳からの再利用は履歴検索を遮断した条件で確認した。1万件超の履歴を模した試験では、期間分割で古い一致ページを取得し、Jevへの候補を80件に制限した。
+
+0.3.0では、通常Chromeを新しい専用プロファイルと動的CDP portで起動できること、Browser Harnessの接続先と名前が製品所有の値へ固定されること、外部から与えた `BU_CDP_URL` と `BU_CDP_WS` が採用されないことを確認した。`jev-ultrafast.Agent` から公開ページのURLとタイトルを観測し、操作経路が専用Chromeへ届くことも確認した。同じ専用プロファイルから履歴拡張がNative Messaging hostへ接続する経路も確認した。ログインが必要な実サイトでの一回の `run` は、専用プロファイルへのログイン後に再確認する。
 
 - 実履歴のタイトルとURLだけで、目的ページを十分に候補へ入れられるか。特に略称や、日本語の目的文と英語URLの組合せ。
 - Jevが役立つ・役立たないをどの程度正しく判定するか。機密情報を絞ったページ状態で足りるか。
@@ -130,4 +135,4 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 
 WindowsではChrome履歴から拡張・名前付きパイプ経由で候補80件を、Linuxでは試験用プロファイルで拡張・Unixソケット経由の往復を確認した。Claude Code・Codex・Cursor・Grok Buildの4ハーネスがスキルを認識することも確かめた。
 
-MFの他の目的についての候補再現率と判定精度、WindowsとLinuxでのTypeSafeとブラウザ操作を含む `run` 全体、Chrome履歴とBrowser UseのプロファイルID照合はまだ確認していない。
+MFの他の目的についての候補再現率と判定精度、WindowsとLinuxでのTypeSafeとブラウザ操作を含む `run` 全体はまだ確認していない。

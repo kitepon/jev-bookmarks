@@ -1,5 +1,12 @@
 # 変更履歴
 
+## 0.3.0 — 専用Chromeへ統一
+
+- 通常のGoogle ChromeをJev Bookmarks専用プロファイルで起動し、履歴拡張と `jev-ultrafast` の操作先を同じプロファイルへ固定した。
+- Chromeが発行したloopback CDP endpointと専用Browser Harness名 `jev-bookmarks` を製品側で設定する。モデル設定に含まれる `BU_CDP_URL`・`BU_CDP_WS` は採用せず、他ツールの `default` daemonへ混線しない。
+- `install` が専用Chromeの `chrome://extensions/` を開き、固定IDの専用拡張ディレクトリを表示する。初回だけ開発者モードから読み込み、以後は同じプロファイルへ保持する。
+- `status` に専用Chrome、プロファイル、拡張ファイル、ブラウザ起動、履歴接続の状態をまとめた。
+
 ## 0.2.2 — jev-ultrafastをフォークから使う
 
 - 上流 browser-use/jev-ultrafast に私たちの修正が入るまで、フォーク quolu/jev-ultrafast の確認済みの版（`e24e14f`）をコミットで固定して使う。フォークには、同梱ファイルをUTF-8で読む修正（Windowsのcp932で落ちる問題）と、初回のBLOCKED判定後に画面の変化を確かめる修正が入っている。

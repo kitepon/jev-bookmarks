@@ -44,6 +44,33 @@ def prepare_process() -> None:
         sys.exit(completed.returncode)
 
 
+def browser_runtime_dir() -> Path:
+    from ..paths import data_dir as configured
+
+    return configured() / "browser-harness" / "runtime"
+
+
+def chrome_executable() -> Path:
+    roots = [os.environ.get(name) for name in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
+    for root in roots:
+        if not root:
+            continue
+        candidate = Path(root) / "Google" / "Chrome" / "Application" / "chrome.exe"
+        if candidate.is_file():
+            return candidate
+    raise RuntimeError("Google Chromeがありません。公式インストーラーで導入してください")
+
+
+def launch_chrome(executable: Path, arguments: list[str]) -> None:
+    subprocess.Popen(
+        [str(executable), *arguments],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+    )
+
+
 def _identity() -> str:
     from ..paths import data_dir as configured
 
