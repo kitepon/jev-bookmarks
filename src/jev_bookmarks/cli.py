@@ -41,7 +41,7 @@ def main() -> None:
             host = install_native_host()
             dedicated_browser = browser.install()
             _print({
-                "status": "installed" if dedicated_browser["history_connected"] else "setup_required",
+                "status": "installed",
                 "host_manifest": str(host),
                 "settings": str(settings),
                 "extension_directory": str(extension),

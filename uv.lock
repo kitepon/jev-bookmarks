@@ -164,11 +164,12 @@ wheels = [
 
 [[package]]
 name = "jev-bookmarks"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "httpx", extra = ["http2"] },
     { name = "jev-ultrafast" },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -181,6 +182,7 @@ dev = [
 requires-dist = [
     { name = "httpx", extras = ["http2"], specifier = ">=0.28,<1" },
     { name = "jev-ultrafast", git = "https://github.com/quolu/jev-ultrafast.git?rev=e24e14f1488e8ec35a544a47d78b9747ebefbdcb" },
+    { name = "websockets", specifier = ">=15,<16" },
 ]
 
 [package.metadata.requires-dev]

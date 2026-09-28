@@ -1,4 +1,5 @@
 import json
+from multiprocessing import AuthenticationError
 
 from . import platforms
 
@@ -8,8 +9,13 @@ class HistoryError(RuntimeError):
 
 
 def available() -> bool:
-    """履歴接続のホストが待ち受けているかの目安。"""
-    return platforms.current().available()
+    """履歴接続のホストが要求へ応答できるか確認する。"""
+    request = json.dumps({"type": "ping"}).encode("utf-8")
+    try:
+        reply = platforms.current().ask(request)
+        return json.loads(reply).get("connected") is True
+    except (AuthenticationError, EOFError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+        return False
 
 
 def search(goal: str) -> list[dict]:

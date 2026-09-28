@@ -1,5 +1,10 @@
 # 変更履歴
 
+## 0.3.1 — 履歴拡張の自動読込
+
+- 固定IDの履歴拡張を、専用Chromeのloopback CDP endpointから起動ごとに読み込む。初回のデベロッパーモード操作をなくし、Chrome再起動後も履歴接続を自動で復元する。
+- `install` と `run` は、拡張読込とNative Messaging hostへの接続確認までを正規入口の一回で行う。読込や接続に失敗した場合は `BrowserSetupError` で停止する。
+
 ## 0.3.0 — 専用Chromeへ統一
 
 - 通常のGoogle ChromeをJev Bookmarks専用プロファイルで起動し、履歴拡張と `jev-ultrafast` の操作先を同じプロファイルへ固定した。

@@ -49,9 +49,12 @@ class Bridge:
 def answer(bridge: Bridge, raw: bytes) -> bytes:
     try:
         request = json.loads(raw)
-        if request.get("type") != "search" or not isinstance(request.get("goal"), str):
+        if request.get("type") == "ping":
+            response = {"connected": True}
+        elif request.get("type") == "search" and isinstance(request.get("goal"), str):
+            response = bridge.forward(request["goal"])
+        else:
             raise ValueError("不正な履歴検索要求です")
-        response = bridge.forward(request["goal"])
     except (json.JSONDecodeError, ValueError, OSError) as exc:
         response = {"error": str(exc)}
     return json.dumps(response, ensure_ascii=False).encode("utf-8")

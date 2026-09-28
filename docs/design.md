@@ -68,7 +68,7 @@ sequenceDiagram
 
 Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。拡張は要求時に履歴を検索して結果を返す。
 
-Jev Bookmarksは通常のGoogle Chromeを端末共通データ配下の専用 `user-data-dir` で起動する。そこへ固定IDの履歴拡張を初回だけ開発者モードで読み込む。Chromeが書いた `DevToolsActivePort` を検証し、そのloopback endpointを `BU_CDP_URL`、専用名 `jev-bookmarks` を `BU_NAME` として上流へ渡す。モデル設定ファイルにあるCDP endpointは読まない。これにより、履歴を持つプロファイルと `jev-ultrafast` が操作するプロファイルの一致を製品が所有する。電話帳から入口が選べれば履歴検索は行わないが、起動時には専用拡張との接続を確認する。接続できなければ `BrowserSetupError`、履歴要求の失敗は `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
+Jev Bookmarksは通常のGoogle Chromeを端末共通データ配下の専用 `user-data-dir` で起動する。Chromeが書いた `DevToolsActivePort` を検証し、そのloopback endpointから固定IDの履歴拡張を起動ごとに読み込む。同じendpointを `BU_CDP_URL`、専用名 `jev-bookmarks` を `BU_NAME` として上流へ渡す。モデル設定ファイルにあるCDP endpointは読まない。これにより、履歴を持つプロファイルと `jev-ultrafast` が操作するプロファイルの一致を製品が所有する。電話帳から入口が選べれば履歴検索は行わないが、起動時には専用拡張との接続を確認する。接続できなければ `BrowserSetupError`、履歴要求の失敗は `HistoryError`、Browser Useの失敗は `BrowserUseError` を返す。
 
 ## OSとハーネスへの適合
 
@@ -127,7 +127,7 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 
 旧版では、このMacの普段使うChromeに履歴拡張を読み込み、Native Messagingから実履歴の候補80件を取得した。空の電話帳から公開ページを履歴で選び、上流の操作後に同じタブを再観測し、Jevの有用性判定でURLを保存するまで一回の `run` で確認した。二つの一時Gitプロジェクトでは、片方のサブディレクトリからの一回実行でそのプロジェクトだけに電話帳が作られ、もう片方の電話帳は空だった。MFクラウド会計の口座一覧と明細一覧も、実履歴から該当ページを選び、操作後に役立つと判定した。電話帳からの再利用は履歴検索を遮断した条件で確認した。1万件超の履歴を模した試験では、期間分割で古い一致ページを取得し、Jevへの候補を80件に制限した。
 
-0.3.0では、通常Chromeを新しい専用プロファイルと動的CDP portで起動できること、Browser Harnessの接続先と名前が製品所有の値へ固定されること、外部から与えた `BU_CDP_URL` と `BU_CDP_WS` が採用されないことを確認した。`jev-ultrafast.Agent` から公開ページのURLとタイトルを観測し、操作経路が専用Chromeへ届くことも確認した。同じ専用プロファイルから履歴拡張がNative Messaging hostへ接続する経路も確認した。ログインが必要な実サイトでの一回の `run` は、専用プロファイルへのログイン後に再確認する。
+0.3.1では、通常Chromeを新しい専用プロファイルと動的CDP portで起動できること、Browser Harnessの接続先と名前が製品所有の値へ固定されること、外部から与えた `BU_CDP_URL` と `BU_CDP_WS` が採用されないことを確認した。`jev-ultrafast.Agent` から公開ページのURLとタイトルを観測し、操作経路が専用Chromeへ届くことも確認した。固定IDの履歴拡張は起動ごとに同じCDP endpointから読み込まれ、専用Chromeを再起動してもNative Messaging hostへ接続し、専用履歴を返す。ログインが必要な実サイトでの一回の `run` は、専用プロファイルへのログイン後に再確認する。
 
 - 実履歴のタイトルとURLだけで、目的ページを十分に候補へ入れられるか。特に略称や、日本語の目的文と英語URLの組合せ。
 - Jevが役立つ・役立たないをどの程度正しく判定するか。機密情報を絞ったページ状態で足りるか。

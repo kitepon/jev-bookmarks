@@ -1,6 +1,6 @@
 [project]
 name = "jev-bookmarks"
-version = "0.3.0"
+version = "0.3.1"
 description = "Chrome履歴から役立つページを選び、Jevで操作してプロジェクトごとに記録する"
 license = "MIT"
 requires-python = ">=3.12"
@@ -8,6 +8,7 @@ dependencies = [
   "httpx[http2]>=0.28,<1",
   # 上流 browser-use/jev-ultrafast に私たちの修正（UTF-8での読み込みなど）が入るまで、フォークの確認済みの版を使う。
   "jev-ultrafast @ git+https://github.com/quolu/jev-ultrafast.git@e24e14f1488e8ec35a544a47d78b9747ebefbdcb",
+  "websockets>=15,<16",
 ]
 
 [project.scripts]

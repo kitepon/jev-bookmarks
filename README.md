@@ -9,7 +9,7 @@
 
 [English summary](README.en.md) · [設計と受入条件](docs/design.md)
 
-**プレビュー版です。** macOS・Windows・Linuxで動き、Claude Code・Codex・Cursor・Grok Buildから呼べます。履歴取得とブラウザ操作には、Jev Bookmarksが起動する同じ専用Chromeプロファイルを使います。Chrome拡張は初回だけ開発者モードで読み込みます。
+**プレビュー版です。** macOS・Windows・Linuxで動き、Claude Code・Codex・Cursor・Grok Buildから呼べます。履歴取得とブラウザ操作には、Jev Bookmarksが起動する同じ専用Chromeプロファイルを使います。Chrome拡張もJev Bookmarksが専用プロファイルへ読み込みます。
 
 ## 使い方を30秒で
 
@@ -67,7 +67,7 @@ jev-bookmarks harness install
 
 `typesafe.env` には `TYPESAFE_API_KEY`、ブラウザ用のenvファイルには上流が必要とするモデル設定を用意します。Chrome接続先はJev Bookmarksが所有するため、`BU_CDP_URL` や `BU_CDP_WS` は読み込みません。秘密の値をこのリポジトリに置かないでください。
 
-`install` は端末共通の設定とChrome Native Messaging hostを登録し、通常のGoogle ChromeをJev Bookmarks専用プロファイルで起動して `chrome://extensions/` を開きます。そこでデベロッパーモードを有効にし、出力された `extension_directory` を「パッケージ化されていない拡張機能」として読み込みます。表示されたIDが `extension_id` と一致すれば初期設定は完了です。拡張は `history` と `nativeMessaging` の権限を使います。初回の出力が `setup_required` でも異常ではなく、読込み後の `status` で `history_connected: true` を確認できます。
+`install` は端末共通の設定とChrome Native Messaging hostを登録し、通常のGoogle ChromeをJev Bookmarks専用プロファイルで起動します。Chromeが発行したloopback CDP endpointから、固定IDの履歴拡張を専用プロファイルへ読み込み、Native Messaging hostとの接続まで確認します。手動でデベロッパーモードを有効にする操作はありません。拡張は `history` と `nativeMessaging` の権限を使います。完了時の `status` で `history_connected: true` を確認できます。
 
 専用Chromeは普段使うChromeと履歴・Cookie・ログイン状態を共有しません。必要なサイトへこのウィンドウからログインし、普段のBrowser Useもこのウィンドウに任せます。以後、`run` は専用Chromeを起動し、専用名のBrowser Harnessへ接続します。利用者の `default` Harnessや普段使うChromeへは接続しません。旧版の履歴拡張を普段使うChromeへ読み込んでいた場合は削除できます。
 
@@ -120,7 +120,7 @@ WindowsとLinuxでは、TypeSafeとブラウザ操作まで含めた `run` の�
 
 旧版では、このMacの普段使うChromeから実履歴を取得し、空の電話帳からURL選択、ブラウザ操作、操作後の再観測、Jevの判定、URL保存まで一回の `run` で確認した。MFクラウド会計の登録済み口座一覧と明細一覧でも目的に合うページを選べた。履歴検索を使わない電話帳の再利用と、役立たないページを保存しない動作も確認した。
 
-0.3.0では、通常Chromeの専用プロファイルをJev Bookmarksが起動し、そのCDP endpointと専用Browser Harness名を強制した。実際に `jev-ultrafast.Agent` から公開ページのURLとタイトルを観測できた。履歴拡張も同じ専用プロファイルだけに置く。専用プロファイルでログインが必要な実サイトの `run` は再確認待ち。
+0.3.1では、通常Chromeの専用プロファイルをJev Bookmarksが起動し、そのCDP endpointと専用Browser Harness名を強制した。固定IDの履歴拡張も起動ごとに同じCDP endpointから読み込み、Chrome再起動後のNative Messaging往復を確認した。実際に `jev-ultrafast.Agent` から公開ページのURLとタイトルを観測できた。専用プロファイルでログインが必要な実サイトの `run` は再確認待ち。
 
 二つの一時Gitプロジェクトを作り、片方のサブディレクトリからの実行でそのプロジェクトだけに電話帳ができることを実機で確認した。1万件超の履歴を模した試験では、期間を分割して古い一致ページを取得し、Jevへ渡す候補を80件に制限した。
 

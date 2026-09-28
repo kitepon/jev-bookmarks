@@ -33,7 +33,7 @@ jev-bookmarks harness install
 
 Put `TYPESAFE_API_KEY` in `typesafe.env` and the upstream model settings in the other env file. Jev Bookmarks owns the Chrome endpoint and ignores `BU_CDP_URL` and `BU_CDP_WS` from that file. Do not commit either file.
 
-`install` starts regular Google Chrome with a dedicated Jev Bookmarks profile and opens `chrome://extensions`. Enable Developer mode and load the printed `extension_directory` as an unpacked extension. Its ID must match `extension_id`. A first result of `setup_required` is expected; after loading the extension, `status` should report `history_connected: true`.
+`install` starts regular Google Chrome with a dedicated Jev Bookmarks profile. It loads the fixed-ID history extension through that profile's loopback CDP endpoint and verifies the Native Messaging connection. No manual Developer mode setup is required. After installation, `status` should report `history_connected: true`.
 
 The dedicated profile does not share cookies, logins, or history with everyday Chrome. Sign in to the required sites in that window. Later `run` calls reconnect both `jev-ultrafast` and history search to that exact profile under the dedicated `jev-bookmarks` Browser Harness name.
 

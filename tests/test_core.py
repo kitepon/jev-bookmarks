@@ -57,18 +57,20 @@ def test_browser_owns_profile_endpoint_and_harness_runtime(tmp_path: Path, monke
 
     monkeypatch.setattr(browser.platforms, "current", lambda: Platform)
     monkeypatch.setattr(browser, "_endpoint", lambda: state["endpoint"])
+    monkeypatch.setattr(browser, "_load_extension", lambda endpoint: launched.append([endpoint, "load-extension"]))
     monkeypatch.setattr(history_bridge, "available", lambda: True)
     result = browser.prepare(history_timeout=0)
     assert result["browser_running"] and result["history_connected"]
     assert f"--user-data-dir={browser.profile_directory()}" in launched[0]
     assert not any(argument.startswith("--load-extension=") for argument in launched[0])
+    assert len(launched) == 1
     assert os.environ["BU_NAME"] == "jev-bookmarks"
     assert os.environ["BU_CDP_URL"] == "http://127.0.0.1:9333"
     assert os.environ["BH_RUNTIME_DIR"] == str(tmp_path / "runtime")
     assert "BU_CDP_WS" not in os.environ
 
 
-def test_install_opens_setup_without_claiming_history_connection(tmp_path: Path, monkeypatch):
+def test_install_reports_missing_native_connection(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("JEV_BOOKMARKS_HOME", str(tmp_path))
     install_extension()
     launched = []
@@ -87,12 +89,14 @@ def test_install_opens_setup_without_claiming_history_connection(tmp_path: Path,
             launched.append(arguments)
 
     monkeypatch.setattr(browser.platforms, "current", lambda: Platform)
-    monkeypatch.setattr(browser, "_endpoint", lambda: None if not launched else "http://127.0.0.1:9333")
-    monkeypatch.setattr(browser, "_open_setup_page", lambda endpoint: launched.append([endpoint, "chrome://extensions/"]))
+    monkeypatch.setattr(browser, "_endpoint", lambda: "http://127.0.0.1:9333")
+    monkeypatch.setattr(browser, "_load_extension", lambda endpoint: launched.append([endpoint, "load-extension"]))
     monkeypatch.setattr(history_bridge, "available", lambda: False)
-    result = browser.install()
-    assert result["history_connected"] is False
-    assert launched[1] == ["http://127.0.0.1:9333", "chrome://extensions/"]
+    ticks = iter((0, 16))
+    monkeypatch.setattr(browser.time, "monotonic", lambda: next(ticks))
+    with pytest.raises(browser.BrowserSetupError, match="Native Messaging host"):
+        browser.install()
+    assert launched[0] == ["http://127.0.0.1:9333", "load-extension"]
 
 
 def test_browser_env_cannot_override_owned_chrome(tmp_path: Path, monkeypatch):

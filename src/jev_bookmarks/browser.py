@@ -1,12 +1,14 @@
+import asyncio
 import base64
 import hashlib
 import json
 import os
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
 from pathlib import Path
+
+import websockets
 
 from . import history_bridge, platforms
 from .install import extension_directory, extension_id
@@ -58,20 +60,42 @@ def _configure(endpoint: str) -> None:
     os.environ.pop("BU_BROWSER_ID", None)
 
 
-def _open_setup_page(endpoint: str) -> None:
+def _load_extension(endpoint: str) -> None:
     try:
-        with urllib.request.urlopen(f"{endpoint}/json/list", timeout=5) as response:
-            targets = json.loads(response.read())
-        if any(target.get("url", "").startswith("chrome://extensions") for target in targets):
-            return
-    except (OSError, TypeError, ValueError, urllib.error.URLError) as exc:
-        raise BrowserSetupError(f"専用Chromeのタブを確認できませんでした: {exc}") from exc
-    url = f"{endpoint}/json/new?{urllib.parse.quote('chrome://extensions/', safe=':/')}"
+        with urllib.request.urlopen(f"{endpoint}/json/version", timeout=5) as response:
+            websocket_url = json.loads(response.read())["webSocketDebuggerUrl"]
+    except (KeyError, OSError, TypeError, ValueError, urllib.error.URLError) as exc:
+        raise BrowserSetupError(f"専用Chromeの拡張読込口を確認できませんでした: {exc}") from exc
+
+    async def load() -> str:
+        async with websockets.connect(websocket_url, open_timeout=5, close_timeout=1, proxy=None) as connection:
+            request_id = 1
+            await connection.send(
+                json.dumps(
+                    {
+                        "id": request_id,
+                        "method": "Extensions.loadUnpacked",
+                        "params": {"path": str(extension_directory())},
+                    }
+                )
+            )
+            async with asyncio.timeout(5):
+                while True:
+                    response = json.loads(await connection.recv())
+                    if response.get("id") != request_id:
+                        continue
+                    if error := response.get("error"):
+                        raise BrowserSetupError(f"専用Chromeへ履歴拡張を読み込めませんでした: {error.get('message')}")
+                    return response["result"]["id"]
+
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, method="PUT"), timeout=5):
-            pass
-    except (OSError, urllib.error.URLError) as exc:
-        raise BrowserSetupError(f"専用Chromeの拡張画面を開けませんでした: {exc}") from exc
+        loaded_id = asyncio.run(load())
+    except BrowserSetupError:
+        raise
+    except (KeyError, OSError, TypeError, ValueError, TimeoutError, websockets.WebSocketException) as exc:
+        raise BrowserSetupError(f"専用Chromeへ履歴拡張を読み込めませんでした: {exc}") from exc
+    if loaded_id != extension_id():
+        raise BrowserSetupError(f"専用Chromeの履歴拡張IDが一致しません: {loaded_id}")
 
 
 def _id_from_key(key: str) -> str:
@@ -88,7 +112,7 @@ def _extension_files_installed() -> bool:
     return isinstance(payload.get("key"), str) and extension_id() == _id_from_key(payload["key"])
 
 
-def _start(*, setup: bool, history_timeout: float) -> dict:
+def _start(*, history_timeout: float) -> dict:
     if not _extension_files_installed():
         raise BrowserSetupError("専用Chrome拡張がありません。jev-bookmarks install を実行してください")
     profile = profile_directory()
@@ -101,7 +125,6 @@ def _start(*, setup: bool, history_timeout: float) -> dict:
         raise BrowserSetupError(str(exc)) from exc
     endpoint = _endpoint()
     if endpoint is None:
-        start_page = "chrome://extensions/" if setup else "about:blank"
         platforms.current().launch_chrome(
             executable,
             [
@@ -111,7 +134,7 @@ def _start(*, setup: bool, history_timeout: float) -> dict:
                 "--no-first-run",
                 "--no-default-browser-check",
                 "--new-window",
-                start_page,
+                "about:blank",
             ],
         )
         deadline = time.monotonic() + 15
@@ -121,8 +144,8 @@ def _start(*, setup: bool, history_timeout: float) -> dict:
         if endpoint is None:
             raise BrowserSetupError("Jev Bookmarks専用Chromeを起動できませんでした")
     _configure(endpoint)
-    if setup and not history_bridge.available():
-        _open_setup_page(endpoint)
+    if not history_bridge.available():
+        _load_extension(endpoint)
     deadline = time.monotonic() + history_timeout
     while not history_bridge.available() and time.monotonic() < deadline:
         time.sleep(0.1)
@@ -138,16 +161,16 @@ def _start(*, setup: bool, history_timeout: float) -> dict:
 
 
 def install() -> dict:
-    return _start(setup=True, history_timeout=2)
+    result = _start(history_timeout=15)
+    if not result["history_connected"]:
+        raise BrowserSetupError("専用Chromeの履歴拡張がNative Messaging hostへ接続しませんでした")
+    return result
 
 
 def prepare(*, history_timeout: float = 15) -> dict:
-    result = _start(setup=False, history_timeout=history_timeout)
+    result = _start(history_timeout=history_timeout)
     if not result["history_connected"]:
-        raise BrowserSetupError(
-            "専用Chromeに履歴拡張がありません。chrome://extensions/ でデベロッパーモードを有効にし、"
-            f"「パッケージ化されていない拡張機能を読み込む」から {extension_directory()} を選んでください"
-        )
+        raise BrowserSetupError("専用Chromeの履歴拡張がNative Messaging hostへ接続しませんでした")
     return result
 
 
