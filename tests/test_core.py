@@ -4,6 +4,7 @@ import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -124,6 +125,51 @@ def test_phonebook_write_failure_keeps_previous_entry(tmp_path: Path, monkeypatc
     with pytest.raises(phonebook.PhonebookError, match="保存先を更新できません"):
         phonebook.remember("次の目的", "https://example.com/next", "次", path)
     assert [entry["url"] for entry in phonebook.read(path)] == ["https://example.com/first"]
+
+
+@pytest.mark.parametrize("other_update", ["remember", "forget"])
+def test_phonebook_serializes_read_modify_write(tmp_path: Path, monkeypatch, other_update):
+    path = tmp_path / "bookmarks.json"
+    phonebook.remember("既存", "https://example.test/old", "既存", path)
+    original_read = phonebook.read
+    first_read = threading.Event()
+    release_first = threading.Event()
+    second_started = threading.Event()
+    second_read = threading.Event()
+
+    def paused_read(target):
+        entries = original_read(target)
+        if not first_read.is_set():
+            first_read.set()
+            assert release_first.wait(3)
+        else:
+            second_read.set()
+        return entries
+
+    def other():
+        second_started.set()
+        if other_update == "remember":
+            return phonebook.remember("二つ目", "https://example.test/second", "二つ目", path)
+        return phonebook.forget("https://example.test/old", path)
+
+    monkeypatch.setattr(phonebook, "read", paused_read)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(phonebook.remember, "一つ目", "https://example.test/first", "一つ目", path)
+        try:
+            assert first_read.wait(3)
+            second = pool.submit(other)
+            assert second_started.wait(3)
+            assert not second_read.wait(0.1)
+        finally:
+            release_first.set()
+        first.result(timeout=3)
+        second.result(timeout=3)
+
+    urls = {entry["url"] for entry in original_read(path)}
+    expected = {"https://example.test/first"}
+    if other_update == "remember":
+        expected.update({"https://example.test/old", "https://example.test/second"})
+    assert urls == expected
 
 
 def test_phonebook_is_scoped_to_git_project(tmp_path: Path, monkeypatch):

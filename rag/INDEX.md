@@ -11,5 +11,6 @@
 - [専用Chromeプロファイル](chrome/dedicated-profile.md): Chrome 136以降のremote debugging制約、Chrome 137以降のunpacked extension制約と、Jev Bookmarksが通常Chromeの専用プロファイルを所有する理由。
 - [pytestのセキュリティ情報](https://github.com/advisories/GHSA-6w46-j5rx-g56g)と[9.0.3のリリース](https://github.com/pytest-dev/pytest/releases/tag/9.0.3): 開発用依存の修正版を確認。
 - [SPDX MIT License](https://spdx.org/licenses/MIT): 公開時のライセンス本文と `MIT` 識別子を確認。
+- [電話帳更新のファイルロック](file-locking/phonebook-updates.md): 原子的な置換だけでは同時更新の消失を防げないことと、ネイティブロックでの直列化。
 
 実装と実機接続の検証結果は [README](../README.md) と [製品設計](../docs/design.md) に記録する。公開とリリースの履歴は [CHANGELOG](../CHANGELOG.md) に記録する。

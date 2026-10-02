@@ -1,15 +1,32 @@
 import json
 import os
 import tempfile
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
+
+from filelock import FileLock, Timeout
 
 from .paths import phonebook_path
 
 
 class PhonebookError(RuntimeError):
     pass
+
+
+@contextmanager
+def _locked(path: Path):
+    # 読取から置換までを一つの更新にし、同時実行による記録の消失を防ぐ。
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.chmod(path.parent, 0o700)
+        with FileLock(path.with_name(f".{path.name}.lock"), timeout=10, mode=0o600, fallback_to_soft=False):
+            yield
+    except Timeout as exc:
+        raise PhonebookError("電話帳の更新が混み合い、10秒以内にロックを取得できませんでした") from exc
+    except OSError as exc:
+        raise PhonebookError(f"電話帳を更新できません: {exc}") from exc
 
 
 def _valid_url(url: str) -> bool:
@@ -64,24 +81,26 @@ def remember(goal: str, url: str, title: str, path: Path | None = None) -> dict:
     if not _valid_url(url):
         raise PhonebookError("http(s) のページURLだけ記録できます")
     path = path or phonebook_path()
-    entries = read(path)
     entry = {
         "goal": goal,
         "url": url,
         "title": title,
         "useful_at": datetime.now(timezone.utc).isoformat(),
     }
-    entries = [old for old in entries if not (old["goal"] == goal and old["url"] == url)]
-    entries.append(entry)
-    _write(path, entries)
+    with _locked(path):
+        entries = read(path)
+        entries = [old for old in entries if not (old["goal"] == goal and old["url"] == url)]
+        entries.append(entry)
+        _write(path, entries)
     return entry
 
 
 def forget(url: str, path: Path | None = None) -> int:
     path = path or phonebook_path()
-    entries = read(path)
-    kept = [item for item in entries if item["url"] != url]
-    if len(kept) == len(entries):
-        return 0
-    _write(path, kept)
-    return len(entries) - len(kept)
+    with _locked(path):
+        entries = read(path)
+        kept = [item for item in entries if item["url"] != url]
+        if len(kept) == len(entries):
+            return 0
+        _write(path, kept)
+        return len(entries) - len(kept)
