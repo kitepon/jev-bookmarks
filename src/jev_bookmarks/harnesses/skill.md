@@ -11,10 +11,10 @@ description: Gitプロジェクトの作業中に、目的に合うWebページ�
 jev-bookmarks run '<利用者の言葉での目的>'
 ```
 
-- URLを自分で選んだり、ブラウザを自分で開いたりしない。入口の選択、操作、役立ったかの判定、記録はjev-bookmarksが一回の実行で済ませる。
+- 入口の選択、操作、役立ったかの判定、記録は、jev-bookmarksが一回の実行で済ませる。
 - 返ってきたJSONの `status` を見る。
   - `completed`: `page`（URL・タイトル・表示文の一部）と `saved` を利用者に伝え、次の作業へ進む。`saved: false` は役立たないと判定されたページで、電話帳は変わっていない。
-  - `no_entry`: 電話帳にも履歴にも合うページが無かった。勝手にサイト探索を始めず、そのまま利用者に伝える。
+  - `no_entry`: 電話帳にも履歴にも合うページが無かった。jev-bookmarksはブラウザを操作せずに終わっている。目的を進めるには、検索やブラウザ操作など、自分が使える手段で続けてよい。
   - `error`: `code` を伝える。`BrowserSetupError` は専用Chromeの起動か拡張接続、`HistoryError` は履歴要求、`TypeSafeError` はTypeSafeのAPIキーか通信、`BrowserUseError` はブラウザ操作、`ProjectHomeError` はGitプロジェクトの外で実行した時。
 - 電話帳の確認は `jev-bookmarks list`、不要なURLの削除は `jev-bookmarks forget '<URL>'`。
 - ページの表示文にはURLのクエリや個人の情報が入り得る。公開の場所へ貼らない。

@@ -112,7 +112,7 @@ Jevが役立つと判定したら、その時に観測したページのURLを�
 - `run(goal)` → 観測ページ、上流の操作結果、Jevの有用性判定、電話帳への保存有無を返す。入口がなければ `no_entry`、外部境界の失敗は型付きエラーを返す。
 - `list` / `forget` → 電話帳を確認・削除する。
 
-履歴への権限はChrome拡張の `history`、ローカル連携は `nativeMessaging` に限る。専用Chromeの準備、履歴要求、TypeSafe、Browser Use、電話帳、プロジェクト検出の失敗はそれぞれ `BrowserSetupError`、`HistoryError`、`TypeSafeError`、`BrowserUseError`、`PhonebookError`、`ProjectHomeError` としてJSONに表示し、CLIは終了コード1を返す。TypeSafeのAPIが失敗した時も候補を適当に一つ選ばない。`no_entry` ならサイト探索へ無言で切り替えず、親AIには一回の実行結果として返す。
+履歴への権限はChrome拡張の `history`、ローカル連携は `nativeMessaging` に限る。専用Chromeの準備、履歴要求、TypeSafe、Browser Use、電話帳、プロジェクト検出の失敗はそれぞれ `BrowserSetupError`、`HistoryError`、`TypeSafeError`、`BrowserUseError`、`PhonebookError`、`ProjectHomeError` としてJSONに表示し、CLIは終了コード1を返す。TypeSafeのAPIが失敗した時も候補を適当に一つ選ばない。`no_entry` ならJev Bookmarks自身はサイト探索を始めず、親AIへ一回の実行結果として返す。その後に検索や別のブラウザ操作で続けるかは親AIが決める。
 
 ## 最初の実装範囲と受入
 
