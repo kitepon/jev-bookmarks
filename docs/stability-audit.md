@@ -20,3 +20,12 @@
 これらの修理は、このMacで使うソースへ反映した。ブラウザとデスクトップのフォークはまだ公開していない。ブラウザの開発指示は、ユーザーの依頼なしでcommit・pushしないと定めている。公開する差分は別の作業コピーに保存し、既存の未コミット変更を混ぜずに検証した。
 
 Shadow DOM、iframe、canvas、別タブへ遷移する操作など、ブラウザの既存MVPの対応外は今回拡張していない。今回の試験は、任意の実サイトやアプリで安定して動くことを保証するものではない。
+
+## 公開後の追記（2026-10-02）
+
+ブラウザとデスクトップの修理は、公開前にmacOS・Linux・Windowsで確かめ直した。その時に、次の2点を直した。
+
+- ブラウザ: TypeSafeのエラー応答は `{"detail":{"error_type":"max_tokens_exceeded"}}` の形だった。最初の修理は `error.code` と `error.type` しか読まず、TypeSafeでは原因コードが出なかった。`detail.error_type` も読むようにし、実際のTypeSafeで `HTTP 401 (authentication_error)` と `HTTP 400 (max_tokens_exceeded)` が出ることを確認した。
+- デスクトップ: 実行ループの新しい試験が、Windowsで起動できなかった（`node --import` にドライブ文字付きのパスを渡していた）。ファイルURLで渡すようにした。
+
+両方とも各フォークのmainへ入れ、上流へPRを出した（[jev-ultrafast #190](https://github.com/browser-use/jev-ultrafast/pull/190)、[agent-desktop #249](https://github.com/lahfir/agent-desktop/pull/249)）。Bookmarksは0.3.5でブラウザの修理を取り込み、3OS×4ハーネスで `run` を確認した。デスクトップの実行ループはmacOS前提の製品なので、実アプリでの確認はmacOSだけで行った。
