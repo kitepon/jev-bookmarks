@@ -52,6 +52,8 @@ flowchart LR
 | 通常のブックマーク | 利用者が登録する | 利用者が判断する | 残る |
 | Jev Bookmarks | 目的文からJevが選ぶ | Jevがページを判定する | 役立ったURLだけプロジェクトに残る |
 
+0.3.6は、親の実行順に揃えたJevの版を使います。操作の選択と実行はそのループが担当し、電話帳へ残すページの有用性判定は従来どおりJev Bookmarksが行います。
+
 ## 導入
 
 Python 3.12、`uv`、Git、Google Chrome、[TypeSafe](https://docs.typesafe.ai/)のAPIキー、[jev-ultrafast](https://github.com/browser-use/jev-ultrafast)が使うモデル設定が必要です。jev-ultrafastは、上流に修正が入るまで[フォーク](https://github.com/quolu/jev-ultrafast)の版を使います（`uv sync` で自動的に入ります）。手順はmacOS・Windows・Linuxで同じです（Windowsは PowerShell で実行します）。

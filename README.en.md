@@ -16,6 +16,8 @@ jev-bookmarks run 'Show the Example Domain page'
 
 The command first checks `<git-root>/jev-bookmark/bookmarks.json`, then asks the Chrome extension for history candidates if needed. Jev selects an existing URL, `jev-ultrafast` operates Chrome, and Jev judges the page observed after the operation. Only a useful page is saved. The result is JSON; the parent agent does not need to choose or approve intermediate steps.
 
+Version 0.3.6 pins Jev to the maintained source that follows the upstream execution sequence. Jev Bookmarks continues to own the separate usefulness judgment for address-book entries.
+
 ## Install (macOS, Windows, Linux)
 
 You need Python 3.12, `uv`, Git, Google Chrome, a TypeSafe API key, and a working `jev-ultrafast` model configuration.
