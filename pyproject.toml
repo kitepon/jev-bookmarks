@@ -5,7 +5,7 @@ description = "Chrome履歴から役立つページを選び、Jevで操作し�
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
-  "filelock>=3.32.7,<4",
+  "filelock>=3.32.7,<5",
   "httpx[http2]>=0.28,<1",
   # 上流 browser-use/jev-ultrafast に私たちの修正（UTF-8での読み込みなど）が入るまで、フォークの確認済みの版を使う。
   "jev-ultrafast @ git+https://github.com/quolu/jev-ultrafast.git@504415a5a5b9f4bdddd7c385d81f6f59e3683695",
