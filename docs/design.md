@@ -63,7 +63,7 @@ sequenceDiagram
 | Chrome拡張 | 専用Chromeプロファイルの履歴を正規の `chrome.history.search` で、要求時だけ読む。候補の絞り込みまでをChrome内で行う。 |
 | Native Messaging host | Chrome拡張とローカルコマンドを接続する。ブラウザの内部DBを読まない。 |
 | Jev Bookmarksのローカルコマンド | `run` の全工程、Jevへの問合せ、操作後の有用性判定、電話帳の永続化を所有する。別に一覧と削除を提供する。 |
-| TypeSafe Jev | 有限個のURL候補から選び、操作後のページが目的に役立つかを判定する。 |
+| TypeSafe Jev | 有限個のURL候補から選び、操作後のページが目的に役立つかを判定する。呼び出しは `typesafe.py` の `_evaluate` に集約する。`TYPESAFE_ANSWER_COMMAND` があればそのコマンドへ要求JSONを標準入力で渡し、応答JSONを標準出力から受ける（キーは端末に置かず、コマンドの先で扱う）。無ければ `TYPESAFE_API_KEY` で `api.typesafe.ai` へ直接送る。 |
 | 上流 `jev-ultrafast` | 開始URLと目的を受け取り、Browser Harness経由でChromeを観測・操作する。各操作の選択は上流ループが所有する。上流 browser-use/jev-ultrafast に私たちの修正が入るまでは、フォーク quolu/jev-ultrafast の確認済みの版をコミットで固定して使う。上流に入ったら上流へ戻す。0.3.7は親の実行ループに揃え、大量候補の引数展開を直した `504415a` を使う。 |
 
 Chrome拡張からホストへは `connectNative` を使う。拡張が起動したホストは同じユーザーだけが接続できるローカルIPCを開き、コマンドからの履歴要求を拡張へ渡す。macOSとLinuxは所有者だけが入れる一時ディレクトリのUnixソケット、Windowsは起動ごとの鍵で相互認証する名前付きパイプを使う。WindowsのChromeはレジストリ（HKCU）に登録したマニフェストを読む。hostは専用拡張のoriginから起動された時だけ待ち受け、待受先と鍵ファイルは0.2系（普段のChromeへ読み込んでいた旧拡張）のものと分ける。普段のChromeに旧拡張が残っていても、専用Chromeの接続を横取りしない。`install` は0.2系が普段のChrome向けに置いたマニフェストを消す。拡張は要求時に履歴を検索して結果を返す。
