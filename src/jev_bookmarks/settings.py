@@ -6,6 +6,7 @@ from .paths import data_dir
 
 KEYS = {
     "TYPESAFE_API_KEY",
+    "TYPESAFE_ANSWER_COMMAND",
     "TEXT_MODEL_API_KEY",
     "TEXT_MODEL_BASE_URL",
     "TEXT_MODEL",

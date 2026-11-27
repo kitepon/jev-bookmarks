@@ -1,5 +1,8 @@
+import json
 import os
 import re
+import shlex
+import subprocess
 from urllib.parse import urlsplit
 
 import httpx
@@ -10,6 +13,19 @@ class TypeSafeError(RuntimeError):
 
 
 def _evaluate(state: dict, questions: dict) -> dict:
+    payload = {"model": "jev-latest", "state": state, "questions": questions}
+    command = os.environ.get("TYPESAFE_ANSWER_COMMAND")
+    if command:
+        # キーを端末に置かない構成。コマンドが要求JSONを標準入力で受け、応答JSONを標準出力へ返す。
+        try:
+            done = subprocess.run(
+                shlex.split(command), input=json.dumps(payload), capture_output=True, text=True, timeout=45, check=True
+            )
+            return json.loads(done.stdout)["answers"]
+        except subprocess.CalledProcessError as exc:
+            raise TypeSafeError(f"TypeSafeの判定に失敗しました: {exc.stderr.strip()[-300:] or exc}") from exc
+        except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as exc:
+            raise TypeSafeError(f"TypeSafeの判定に失敗しました: {exc}") from exc
     key = os.environ.get("TYPESAFE_API_KEY")
     if not key:
         raise TypeSafeError("TYPESAFE_API_KEY がありません")
@@ -17,7 +33,7 @@ def _evaluate(state: dict, questions: dict) -> dict:
         response = httpx.post(
             "https://api.typesafe.ai/v1/systemone",
             headers={"Authorization": f"Bearer {key}"},
-            json={"model": "jev-latest", "state": state, "questions": questions},
+            json=payload,
             timeout=30,
         )
         response.raise_for_status()

@@ -313,6 +313,17 @@ def test_browser_failure_is_reported_as_external_error(monkeypatch):
         runner.run("Example Domainを開く")
 
 
+def test_answer_command_replaces_the_key_and_reports_its_failure(monkeypatch, tmp_path):
+    ok = tmp_path / "ok.py"
+    ok.write_text("import json,sys; r=json.load(sys.stdin); print(json.dumps({'answers': {'echo': r['state']}}))")
+    monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
+    monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} {ok}")
+    assert typesafe._evaluate({"goal": "g"}, {}) == {"echo": {"goal": "g"}}
+    monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} -c 'import sys; sys.exit(\"curl: (22) 401\")'")
+    with pytest.raises(typesafe.TypeSafeError, match="401"):
+        typesafe._evaluate({}, {})
+
+
 def test_entry_choice_asks_for_a_reachable_start_not_only_the_target(monkeypatch):
     asked = {}
 
