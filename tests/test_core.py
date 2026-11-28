@@ -107,10 +107,14 @@ def test_browser_env_cannot_override_owned_chrome(tmp_path: Path, monkeypatch):
     typesafe_env = tmp_path / "typesafe.env"
     browser_env = tmp_path / "browser.env"
     typesafe_env.write_text("TYPESAFE_API_KEY=test\n", encoding="utf-8")
-    browser_env.write_text("TEXT_MODEL=test-model\nBU_CDP_URL=http://127.0.0.1:9999\n", encoding="utf-8")
+    monkeypatch.delenv("TEXT_MODEL_COMMAND", raising=False)
+    browser_env.write_text(
+        "TEXT_MODEL=test-model\nTEXT_MODEL_COMMAND=broker run\nBU_CDP_URL=http://127.0.0.1:9999\n", encoding="utf-8"
+    )
     settings.save_env_paths(typesafe_env, browser_env)
     settings.load_environment()
     assert os.environ["TEXT_MODEL"] == "test-model"
+    assert os.environ["TEXT_MODEL_COMMAND"] == "broker run"
     assert "BU_CDP_URL" not in os.environ
 
 
