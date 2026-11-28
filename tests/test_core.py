@@ -323,7 +323,9 @@ def test_answer_command_replaces_the_key_and_reports_its_failure(monkeypatch, tm
     monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
     monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} {ok}")
     assert typesafe._evaluate({"goal": "g"}, {}) == {"echo": {"goal": "g"}}
-    monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} -c 'import sys; sys.exit(\"curl: (22) 401\")'")
+    fail = tmp_path / "fail.py"
+    fail.write_text("import sys; sys.exit('curl: (22) 401')")
+    monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} {fail}")
     with pytest.raises(typesafe.TypeSafeError, match="401"):
         typesafe._evaluate({}, {})
 
