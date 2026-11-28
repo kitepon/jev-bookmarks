@@ -18,8 +18,9 @@ def _evaluate(state: dict, questions: dict) -> dict:
     if command:
         # キーを端末に置かない構成。コマンドが要求JSONを標準入力で受け、応答JSONを標準出力へ返す。
         try:
+            args = command if os.name == "nt" else shlex.split(command)  # Windows takes the command line as one string
             done = subprocess.run(
-                shlex.split(command), input=json.dumps(payload), capture_output=True, text=True, timeout=45, check=True
+                args, input=json.dumps(payload), capture_output=True, text=True, timeout=45, check=True
             )
             return json.loads(done.stdout)["answers"]
         except subprocess.CalledProcessError as exc:

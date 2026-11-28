@@ -1,5 +1,11 @@
 # 変更履歴
 
+## 0.3.9 — Jev本体のキーも端末に置かずに呼べるようにする
+
+- Jevの依存を `179ff5c` へ更新した。Jev本体が、TypeSafeの呼び出しを `TYPESAFE_ANSWER_COMMAND`、文章モデルの呼び出しを `TEXT_MODEL_COMMAND` のコマンド経由で行える。要求JSONを標準入力へ渡し、応答JSONを標準出力から受ける。
+- Windowsでコマンドのパス（`C:\tools\...`）の区切りが壊れ、`TYPESAFE_ANSWER_COMMAND` が `WinError 2` で失敗する問題を直した（0.3.8の不具合）。
+- 環境設定に `TEXT_MODEL_COMMAND` を足した。従来の `TYPESAFE_API_KEY`・`TEXT_MODEL_API_KEY` はそのまま使える。両方あるときはコマンドが先。
+
 ## 0.3.8 — TypeSafeのキーを端末に置かずに呼べるようにする
 
 - 環境設定に `TYPESAFE_ANSWER_COMMAND` を足した。設定すると、TypeSafeへの要求JSONをそのコマンドの標準入力へ渡し、応答JSONを標準出力から受ける。キーは端末に置かず、コマンドの先で扱える。コマンドが失敗した時は、標準エラーの末尾を `TypeSafeError` に含める。

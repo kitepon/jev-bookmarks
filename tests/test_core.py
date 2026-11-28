@@ -107,10 +107,14 @@ def test_browser_env_cannot_override_owned_chrome(tmp_path: Path, monkeypatch):
     typesafe_env = tmp_path / "typesafe.env"
     browser_env = tmp_path / "browser.env"
     typesafe_env.write_text("TYPESAFE_API_KEY=test\n", encoding="utf-8")
-    browser_env.write_text("TEXT_MODEL=test-model\nBU_CDP_URL=http://127.0.0.1:9999\n", encoding="utf-8")
+    monkeypatch.delenv("TEXT_MODEL_COMMAND", raising=False)
+    browser_env.write_text(
+        "TEXT_MODEL=test-model\nTEXT_MODEL_COMMAND=broker run\nBU_CDP_URL=http://127.0.0.1:9999\n", encoding="utf-8"
+    )
     settings.save_env_paths(typesafe_env, browser_env)
     settings.load_environment()
     assert os.environ["TEXT_MODEL"] == "test-model"
+    assert os.environ["TEXT_MODEL_COMMAND"] == "broker run"
     assert "BU_CDP_URL" not in os.environ
 
 
@@ -319,7 +323,9 @@ def test_answer_command_replaces_the_key_and_reports_its_failure(monkeypatch, tm
     monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
     monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} {ok}")
     assert typesafe._evaluate({"goal": "g"}, {}) == {"echo": {"goal": "g"}}
-    monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} -c 'import sys; sys.exit(\"curl: (22) 401\")'")
+    fail = tmp_path / "fail.py"
+    fail.write_text("import sys; sys.exit('curl: (22) 401')")
+    monkeypatch.setenv("TYPESAFE_ANSWER_COMMAND", f"{sys.executable} {fail}")
     with pytest.raises(typesafe.TypeSafeError, match="401"):
         typesafe._evaluate({}, {})
 

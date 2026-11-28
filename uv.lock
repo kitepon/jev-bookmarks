@@ -169,7 +169,7 @@ wheels = [
 
 [[package]]
 name = "jev-bookmarks"
-version = "0.3.8"
+version = "0.3.9"
 source = { editable = "." }
 dependencies = [
     { name = "filelock" },
@@ -188,7 +188,7 @@ dev = [
 requires-dist = [
     { name = "filelock", specifier = ">=3.32.7,<4" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28,<1" },
-    { name = "jev-ultrafast", git = "https://github.com/quolu/jev-ultrafast.git?rev=504415a5a5b9f4bdddd7c385d81f6f59e3683695" },
+    { name = "jev-ultrafast", git = "https://github.com/quolu/jev-ultrafast.git?rev=179ff5c8ab152ab8fe9741c83e87b37dc80972e4" },
     { name = "websockets", specifier = ">=15,<16" },
 ]
 
@@ -201,7 +201,7 @@ dev = [
 [[package]]
 name = "jev-ultrafast"
 version = "0.1.0"
-source = { git = "https://github.com/quolu/jev-ultrafast.git?rev=504415a5a5b9f4bdddd7c385d81f6f59e3683695#504415a5a5b9f4bdddd7c385d81f6f59e3683695" }
+source = { git = "https://github.com/quolu/jev-ultrafast.git?rev=179ff5c8ab152ab8fe9741c83e87b37dc80972e4#179ff5c8ab152ab8fe9741c83e87b37dc80972e4" }
 dependencies = [
     { name = "browser-harness" },
     { name = "httpx", extra = ["http2"] },

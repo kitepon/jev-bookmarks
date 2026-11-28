@@ -33,7 +33,7 @@ jev-bookmarks install \
 jev-bookmarks harness install
 ```
 
-Put `TYPESAFE_API_KEY` in `typesafe.env` and the upstream model settings in the other env file. Jev Bookmarks owns the Chrome endpoint and ignores `BU_CDP_URL` and `BU_CDP_WS` from that file. Do not commit either file. To keep the key off the machine, set `TYPESAFE_ANSWER_COMMAND` instead of `TYPESAFE_API_KEY`: Jev Bookmarks writes the request JSON (`model`, `state`, `questions`) to the command's stdin and reads TypeSafe's response JSON (with `answers`) from its stdout. The command wins when both are set.
+Put `TYPESAFE_API_KEY` in `typesafe.env` and the upstream model settings in the other env file. Jev Bookmarks owns the Chrome endpoint and ignores `BU_CDP_URL` and `BU_CDP_WS` from that file. Do not commit either file. To keep the key off the machine, set `TYPESAFE_ANSWER_COMMAND` instead of `TYPESAFE_API_KEY`: Jev Bookmarks writes the request JSON (`model`, `state`, `questions`) to the command's stdin and reads TypeSafe's response JSON (with `answers`) from its stdout. The command wins when both are set. The same works for the model settings file: write `TEXT_MODEL_COMMAND` instead of `TEXT_MODEL_API_KEY`. The upstream loop uses `TYPESAFE_ANSWER_COMMAND` to choose operations and `TEXT_MODEL_COMMAND` to write field text.
 
 `install` starts regular Google Chrome with a dedicated Jev Bookmarks profile. It loads the fixed-ID history extension through that profile's loopback CDP endpoint and verifies the Native Messaging connection. No manual Developer mode setup is required. After installation, `status` should report `history_connected: true`.
 
