@@ -188,7 +188,7 @@ dev = [
 requires-dist = [
     { name = "filelock", specifier = ">=3.32.7,<4" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28,<1" },
-    { name = "jev-ultrafast", git = "https://github.com/quolu/jev-ultrafast.git?rev=5d7b0a3ca1e67e6f21cba5049f1b8ac769d4e986" },
+    { name = "jev-ultrafast", git = "https://github.com/quolu/jev-ultrafast.git?rev=179ff5c8ab152ab8fe9741c83e87b37dc80972e4" },
     { name = "websockets", specifier = ">=15,<16" },
 ]
 
@@ -201,7 +201,7 @@ dev = [
 [[package]]
 name = "jev-ultrafast"
 version = "0.1.0"
-source = { git = "https://github.com/quolu/jev-ultrafast.git?rev=5d7b0a3ca1e67e6f21cba5049f1b8ac769d4e986#5d7b0a3ca1e67e6f21cba5049f1b8ac769d4e986" }
+source = { git = "https://github.com/quolu/jev-ultrafast.git?rev=179ff5c8ab152ab8fe9741c83e87b37dc80972e4#179ff5c8ab152ab8fe9741c83e87b37dc80972e4" }
 dependencies = [
     { name = "browser-harness" },
     { name = "httpx", extra = ["http2"] },

@@ -8,7 +8,7 @@ dependencies = [
   "filelock>=3.32.7,<4",
   "httpx[http2]>=0.28,<1",
   # 上流 browser-use/jev-ultrafast に私たちの修正（UTF-8での読み込みなど）が入るまで、フォークの確認済みの版を使う。
-  "jev-ultrafast @ git+https://github.com/quolu/jev-ultrafast.git@5d7b0a3ca1e67e6f21cba5049f1b8ac769d4e986",
+  "jev-ultrafast @ git+https://github.com/quolu/jev-ultrafast.git@179ff5c8ab152ab8fe9741c83e87b37dc80972e4",
   "websockets>=15,<16",
 ]
 
